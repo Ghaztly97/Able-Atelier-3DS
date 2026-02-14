@@ -762,6 +762,7 @@ spriteTypes.toolsPanel = function(x, y)
 						break
 					end
 				end
+				-- this is a git test!
 				if clickedButton <= 3 then
 					editor.activeTool = 'pen'
 					editor.penSize = clickedButton

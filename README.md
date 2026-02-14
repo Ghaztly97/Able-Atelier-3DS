@@ -1,6 +1,7 @@
 # ACNL Pattern Editor 3DS!
 Edit Patterns for Animal Crossing New Leaf: Welcome Amiibo directly on your 3DS!
-NOTE: Works **ONLY** for the Welcome Amiibo update, so update your game if you haven't!
+
+NOTE: Works **ONLY** for the Welcome Amiibo update, so update your copy of ACNL if you haven't!
 
 ### Credits
 * Made using LÖVE2D with <a href="https://github.com/lovebrew/lovepotion">LÖVE Potion</a>

@@ -175,7 +175,7 @@ function love.draw(screen)
 
 		love.graphics.setColor(1,1,1)
 		love.graphics.rectangle('line', 0, 0, 320, 240)
-		love.graphics.print(love.timer.getFPS())
+		--love.graphics.print(love.timer.getFPS())
 
 		love.graphics.rectangle('fill', 20, 215, 280*(killTime/0.5), 10)
 	end

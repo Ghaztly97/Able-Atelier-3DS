@@ -4,6 +4,7 @@ colors = {}
 local mannequinRender = {}
 local editor = {}
 local toolsPanel = {}
+local undoRedo = {}
 
 local currentPatternState = {
 	data1 = {},
@@ -362,13 +363,6 @@ spriteTypes.patternRenderAndEditor = function()
 		canvasView:attach()
 		love.graphics.draw(myself.patternCanvas, 0, 0, 0)
 		love.graphics.setColor(1,1,1)
-
-		love.graphics.setLineWidth(0.001)
-		for i = 0, 0 do
-			love.graphics.line(i, 0, i, 32)
-			love.graphics.line(0, i, 32, i)
-		end
-		love.graphics.setLineWidth(1)
 		
 		canvasView:detach()
 
@@ -381,6 +375,8 @@ spriteTypes.patternRenderAndEditor = function()
 		if palletOpen then
 			love.graphics.draw(myself.majorPallet)
 		end
+
+		love.graphics.print(myself.undoPointer)
 	end
 
 	myself.updateCanvas = false
@@ -563,6 +559,76 @@ spriteTypes.patternRenderAndEditor = function()
 		end
 	end)
 
+	myself.undoPointer = 0
+	myself.history = {}
+	scripts.history = coroutine.create(function()
+		while true do
+			if touch.down and not myself.debounce then
+				local x, y = canvasView:worldCoords(touch.x, touch.y)
+				x, y = math.floor(x), math.floor(y)
+				if not (x < 0 or x > 32 or y < 0 or y > 31) then
+					if myself.undoPointer ~= 0 then
+						local start = #myself.history - myself.undoPointer + 1
+						for i = start, #myself.history do
+							table.remove(myself.history, start)
+						end
+						myself.undoPointer = 0
+					end
+					while touch.down do
+						coroutine.yield()
+					end
+					myself.history[#myself.history + 1] = {
+						data1 = tableToPatternString(currentPatternState.data1),
+						data2 = tableToPatternString(currentPatternState.data2),
+						data3 = tableToPatternString(currentPatternState.data3),
+						data4 = tableToPatternString(currentPatternState.data4)
+					}
+					if #myself.history > 5 then
+						table.remove(myself.history, 1)
+					end
+				end
+			end
+			coroutine.yield()
+		end
+	end)
+	scripts.undoRedo = coroutine.create(function() 
+		while true do
+			if receive('undo') then
+				local snapshot = myself.history[#myself.history - (myself.undoPointer + 1)]
+				if snapshot then
+					myself.undoPointer = myself.undoPointer + 1
+					currentPatternState.data1 = patternStringToTable(snapshot.data1)
+					currentPatternState.data2 = patternStringToTable(snapshot.data2)
+					currentPatternState.data3 = patternStringToTable(snapshot.data3)
+					currentPatternState.data4 = patternStringToTable(snapshot.data4)
+					myself.activeEditor = currentPatternState.data1
+
+					broadcast('mannequinUpdate')
+					myself.updateCanvas = true
+					coroutine.yield()
+					myself.updateCanvas = false
+				end
+			end
+			if receive('redo') then
+				local snapshot = myself.history[#myself.history - (myself.undoPointer - 1)]
+				if snapshot then
+					myself.undoPointer = myself.undoPointer - 1
+					currentPatternState.data1 = patternStringToTable(snapshot.data1)
+					currentPatternState.data2 = patternStringToTable(snapshot.data2)
+					currentPatternState.data3 = patternStringToTable(snapshot.data3)
+					currentPatternState.data4 = patternStringToTable(snapshot.data4)
+					myself.activeEditor = currentPatternState.data1
+
+					broadcast('mannequinUpdate')
+					myself.updateCanvas = true
+					coroutine.yield()
+					myself.updateCanvas = false
+				end
+			end
+			coroutine.yield()
+		end
+	end)
+
 	myself.scripts = scripts
 	return myself
 end
@@ -669,9 +735,10 @@ end
 spriteTypes.toolsPanel = function(x, y)
 	local myself = baseSprite()
 	local scripts = {}
-	local buttons = {
+	local icons = {
 		long = love.graphics.newImage('assets/images/button_size1.png'),
-		short = love.graphics.newImage('assets/images/button_size2.png')
+		short = love.graphics.newImage('assets/images/button_size2.png'),
+		pencil = love.graphics.newImage('assets/images/pencil.png')
 	}
 	myself.x, myself.y = x, y
 	toolsPanel = myself
@@ -698,12 +765,20 @@ spriteTypes.toolsPanel = function(x, y)
 			love.graphics.setLineWidth(1)
 
 			love.graphics.setColor(0.9, 0.7, 0.4)
-			love.graphics.draw(buttons.short, myself.x + 5, myself.y + 10, 0, 1.2, 1.2)
-			love.graphics.draw(buttons.short, myself.x + 60+5, myself.y + 10, 0, 1.2, 1.2)
-			love.graphics.draw(buttons.short, myself.x + 5, myself.y + 45 + 10, 0, 1.2, 1.2)
-			love.graphics.draw(buttons.short, myself.x + 60+5, myself.y + 45 + 10, 0, 1.2, 1.2)
+			love.graphics.draw(icons.short, myself.x + 5, myself.y + 10, 0, 1.2, 1.2)
+			love.graphics.draw(icons.short, myself.x + 60+5, myself.y + 10, 0, 1.2, 1.2)
+			love.graphics.draw(icons.short, myself.x + 5, myself.y + 45 + 10, 0, 1.2, 1.2)
+			--love.graphics.draw(icons.short, myself.x + 60+5, myself.y + 45 + 10, 0, 1.2, 1.2)
 
-			love.graphics.draw(buttons.long, myself.x + 10, myself.y + 45*2 + 10, 0, 1.2, 1.2)
+			love.graphics.draw(icons.long, myself.x + 10, myself.y + 45*2 + 10, 0, 1.2, 1.2)
+
+			love.graphics.setColor(0.5, 0.2, 0.1)
+			love.graphics.draw(icons.pencil, myself.x + 5 + 12.5, myself.y + 10 + 33, (-5/4)*math.pi, 1, 1, 40, 4)
+			love.graphics.print('1', myself.x + 5 + 5, myself.y + 10 + 2.5, 0)
+			love.graphics.draw(icons.pencil, myself.x + 60+5 + 12.5, myself.y + 10 + 33, (-5/4)*math.pi, 1, 1, 40, 4)
+			love.graphics.print('2', myself.x + 60+5 + 5, myself.y + 10 + 2.5, 0)
+			love.graphics.draw(icons.pencil, myself.x + 5 + 12.5, myself.y + 45 + 10 + 33, (-5/4)*math.pi, 1, 1, 40, 4)
+			love.graphics.print('3', myself.x + 5 + 5, myself.y + 45 + 10 + 2.5, 0)
 
 			--love.graphics.setColor(1,0,0)
 			--for i, hitbox in ipairs(hitboxes) do
@@ -723,6 +798,7 @@ spriteTypes.toolsPanel = function(x, y)
 					myself.visible = true
 					myself.debounce = true
 					editor.debounce = true
+					undoRedo.debounce = true
 					while timer/length < 1 do
 						timer = timer + love.timer.getDelta()
 						myself.x = lerp(timer/length, 320, 320-123, 'sineInOut')
@@ -744,6 +820,7 @@ spriteTypes.toolsPanel = function(x, y)
 					myself.debounce = false
 					myself.trayOpen = false
 					editor.debounce = false
+					undoRedo.debounce = false
 				end
 			end
 			coroutine.yield()
@@ -803,6 +880,64 @@ spriteTypes.toolsPanel = function(x, y)
 				end
 				while touch.down do
 					coroutine.yield()
+				end
+			end
+			coroutine.yield()
+		end
+	end)
+
+	myself.scripts = scripts
+	return myself
+end
+
+spriteTypes.undoRedo = function(x, y)
+	local myself = baseSprite()
+	local scripts = {}
+	undoRedo = myself
+	myself.screen = 'bottom'
+
+	local arrow = love.graphics.newImage('assets/images/arrow.png')
+	local hitboxes = {
+		HC.rectangle(320-70, 205, 35, 30),
+		HC.rectangle(320-35, 205, 35, 30),
+	}
+	myself.extraDraw = function()
+		love.graphics.setColor(0.3,0.2,0.5)
+		love.graphics.rectangle('fill', 320-70, 200, 70, 50, 10)
+		
+		love.graphics.setColor(0.3/2,0.2/2,0.5/2)
+		love.graphics.draw(arrow, 320-30, 210)
+		love.graphics.draw(arrow, 320-40, 210, 0, -1, 1)
+		
+		love.graphics.setColor(1,1,1)
+
+		for i, hitbox in ipairs(hitboxes) do
+			hitbox:draw('line')
+		end
+	end
+
+	myself.debounce = false
+	scripts.undeRedo = coroutine.create(function() 
+		while true do
+			if touch.down and not myself.debounce then
+				local clicked = false
+				if hitboxes[1]:contains(touch.x, touch.y) then --undo
+					clicked = true
+					broadcast('undo')
+				elseif hitboxes[2]:contains(touch.x, touch.y) then --redo
+					clicked = true
+					broadcast('redo')
+				else
+					while touch.down do
+						coroutine.yield()
+					end
+				end
+				if clicked then
+					editor.debounce = true
+					while touch.down do
+						coroutine.yield()
+					end
+					editor.debounce = false
 				end
 			end
 			coroutine.yield()

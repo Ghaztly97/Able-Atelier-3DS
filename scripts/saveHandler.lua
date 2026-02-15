@@ -329,6 +329,7 @@ spriteTypes.saveHandler = function()
 				
 				createInstance('mannequinRender', 0, 0)
 				createInstance('patternRenderAndEditor', 0, 0)
+				createInstance('undoRedo', 0, 0)
 				createInstance('toolsPanel', 320 - 123, 240/2 - 60)
 				broadcast('saveParsed', parsedTable)
 				myself:goToLayer(#gameSprites)
@@ -403,7 +404,7 @@ spriteTypes.saveHandler = function()
 		while true do
 			local received = receive('quitCheck')
 			if received then
-				stepString = 'Are you sure you want to quit?'
+				stepString = 'Are you sure you want to quit?\n(A to confirm, B to cancel.)'
 				while true do
 					if inputs.getAction('select') then
 						while inputs.getAction('select') do

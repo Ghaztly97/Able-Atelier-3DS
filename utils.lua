@@ -11,7 +11,11 @@ function printTable(t, level)
 
         for key, value in pairs(t) do
             io.write(string.rep("\t", level) .. string.format("[%s] = ", key))
-            printTable(value, level)
+            if type(value) == 'table' and #value < 15 then
+                printTable(value, level)
+            elseif type(value) ~= 'table' then
+                printTable(value, level)
+            end
             io.write(",\n")
         end
 

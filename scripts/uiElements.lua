@@ -223,15 +223,22 @@ spriteTypes.patternRenderAndEditor = function()
 	myself.majorPallet = nil
 	myself.selectedColor = 1
 
-	local function updatePatternCanvas(pixelTable, pallet)
+	local function updatePatternCanvas(pixelTable, pallet, isUndoRedo, oldPixelTable)
 		local oldCanvas = love.graphics.getCanvas()
 		local x = 1
 		local y = 0
 		love.graphics.setCanvas(myself.patternCanvas)
-		love.graphics.print(tostring(#colors))
+		--love.graphics.print(tostring(#pixelTable))
 		for i, pixel in ipairs(pixelTable) do
-			love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
-			love.graphics.rectangle('fill', x-1, y, 1, 1)
+			if isUndoRedo then
+				if oldPixelTable[i] ~= pixel then
+					love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+					love.graphics.rectangle('fill', x-1, y, 1, 1)
+				end
+			else
+				love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+				love.graphics.rectangle('fill', x-1, y, 1, 1)
+			end
 
 			x = x + 1
 			if x > 32 then
@@ -271,8 +278,15 @@ spriteTypes.patternRenderAndEditor = function()
 
 			love.graphics.setCanvas(oldCanvas)
 		end
-		if myself.updateCanvas then
-			updatePatternCanvas(myself.activeEditor, currentPatternState.pallet)
+		local updateCanvas = receive('updateCanvas')
+		if updateCanvas then
+			if type(updateCanvas) == 'table' then
+				updatePatternCanvas(myself.activeEditor, currentPatternState.pallet, true, updateCanvas.oldPixelTable)
+			else
+				updatePatternCanvas(myself.activeEditor, currentPatternState.pallet)
+			end
+
+			-- redraw the pallet:
 			local oldCanvas = love.graphics.getCanvas()
 			love.graphics.setCanvas(myself.palletCanvas)
 			love.graphics.clear()
@@ -303,7 +317,9 @@ spriteTypes.patternRenderAndEditor = function()
 					love.graphics.rectangle('fill', x-1, y-1, 2, 2)
 					for py = -1, 0 do
 						for px = -1, 0 do
-							myself.activeEditor[(y+py)*32+(x+px)+1] = myself.selectedColor-1
+							if x + px < 32 and x + px > 0 and  y + py < 32 and y + py > 0 then
+								myself.activeEditor[(y+py)*32+(x+px)+1] = myself.selectedColor-1
+							end
 						end
 					end
 				elseif myself.penSize == 3 then
@@ -311,7 +327,9 @@ spriteTypes.patternRenderAndEditor = function()
 					love.graphics.rectangle('fill', x-1, y-1, 3, 3)
 					for py = -1, 1 do
 						for px = -1, 1 do
-							myself.activeEditor[(y+py)*32+(x+px)+1] = myself.selectedColor-1
+							if x + px < 32 and x + px > 0 and  y + py < 32 and y + py > 0 then
+								myself.activeEditor[(y+py)*32+(x+px)+1] = myself.selectedColor-1
+							end
 						end
 					end
 				end
@@ -387,9 +405,8 @@ spriteTypes.patternRenderAndEditor = function()
 				myself.updateCanvas = (received ~= nil)
 			end
 			if received then
-
 				saveData_parsed = received
-				broadcast('mannequinUpdate')
+				
 				currentPatternState.data1 = patternStringToTable(received.patternData1)
 				currentPatternState.data2 = patternStringToTable(received.patternData2)
 				currentPatternState.data3 = patternStringToTable(received.patternData3)
@@ -397,8 +414,8 @@ spriteTypes.patternRenderAndEditor = function()
 				currentPatternState.pallet = saveData_parsed.pallet
 
 				myself.activeEditor = currentPatternState.data1
-				coroutine.yield()
-				myself.updateCanvas = false
+				broadcast('mannequinUpdate')
+				broadcast('updateCanvas')
 			end
 			coroutine.yield()
 		end
@@ -500,9 +517,7 @@ spriteTypes.patternRenderAndEditor = function()
 										if largePalletHitbox:contains(touch.x, touch.y) then
 											currentPatternState.pallet[myself.selectedColor] = largePalletHitbox.index - 1
 											broadcast('mannequinUpdate')
-											myself.updateCanvas = true
-											coroutine.yield()
-											myself.updateCanvas = false
+											broadcast('updateCanvas')
 											break
 										end
 									end
@@ -522,24 +537,6 @@ spriteTypes.patternRenderAndEditor = function()
 				end
 			else
 				while touch.down do
-					coroutine.yield()
-				end
-			end
-			coroutine.yield()
-		end
-	end)
-
-	scripts.swapActivePattern = coroutine.create(function()
-		local swapdaswap = 1
-		while true do
-			if false then
-				swapdaswap = swapdaswap + 1
-				if swapdaswap > 4 then
-					swapdaswap = 1
-				end
-				myself.activeEditor = currentPatternState['data'..swapdaswap]
-				updatePatternCanvas(myself.activeEditor, currentPatternState.pallet)
-				while inputs.getAction('select') do
 					coroutine.yield()
 				end
 			end
@@ -597,6 +594,7 @@ spriteTypes.patternRenderAndEditor = function()
 				local snapshot = myself.history[#myself.history - (myself.undoPointer + 1)]
 				if snapshot then
 					myself.undoPointer = myself.undoPointer + 1
+					local oldPixelTable = tableToPatternString(myself.activeEditor)
 					currentPatternState.data1 = patternStringToTable(snapshot.data1)
 					currentPatternState.data2 = patternStringToTable(snapshot.data2)
 					currentPatternState.data3 = patternStringToTable(snapshot.data3)
@@ -604,15 +602,14 @@ spriteTypes.patternRenderAndEditor = function()
 					myself.activeEditor = currentPatternState.data1
 
 					broadcast('mannequinUpdate')
-					myself.updateCanvas = true
-					coroutine.yield()
-					myself.updateCanvas = false
+					broadcast('updateCanvas', {oldPixelTable = patternStringToTable(oldPixelTable)})
 				end
 			end
 			if receive('redo') then
 				local snapshot = myself.history[#myself.history - (myself.undoPointer - 1)]
 				if snapshot then
 					myself.undoPointer = myself.undoPointer - 1
+					local oldPixelTable = tableToPatternString(myself.activeEditor)
 					currentPatternState.data1 = patternStringToTable(snapshot.data1)
 					currentPatternState.data2 = patternStringToTable(snapshot.data2)
 					currentPatternState.data3 = patternStringToTable(snapshot.data3)
@@ -620,9 +617,7 @@ spriteTypes.patternRenderAndEditor = function()
 					myself.activeEditor = currentPatternState.data1
 
 					broadcast('mannequinUpdate')
-					myself.updateCanvas = true
-					coroutine.yield()
-					myself.updateCanvas = false
+					broadcast('updateCanvas', {oldPixelTable = patternStringToTable(oldPixelTable)})
 				end
 			end
 			coroutine.yield()

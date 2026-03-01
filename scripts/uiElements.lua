@@ -714,10 +714,13 @@ spriteTypes.mannequinRender = function()
 
 	myself.mannequinUpdate = false
 	local mannequinShading = love.graphics.newCanvas(192, 192)
+	local showTable = {
+		'LongSleeveDress', 'ShortSleeveDress', 'SleevelessDress', 'ShortSleeveShirt', 'SleevelessShirt'
+	}
 	myself.extraDraw = function()
 		love.graphics.setColor(1,1,1)
 		local mannequinUpdate = receive('mannequinUpdate')
-		if mannequinUpdate then
+		if mannequinUpdate and tableContains(showTable, saveData_parsed.patternType) then
 			if type(mannequinUpdate) == 'table' then
 				refreshMannequin(currentPatternState.data1, currentPatternState.pallet, myself.mannequinFront, true, mannequinUpdate.data1)
 				refreshMannequin(currentPatternState.data2, currentPatternState.pallet, myself.mannequinBack, true, mannequinUpdate.data2)
@@ -737,19 +740,23 @@ spriteTypes.mannequinRender = function()
 			love.graphics.setCanvas(oldCanvas)
 		end
 
-		local oldCanvas = love.graphics.getCanvas()
-		love.graphics.setCanvas(myself.finalCanvas)
-		love.graphics.clear()
+		if saveData_parsed.patternType ~= 'Pattern' then
+			local oldCanvas = love.graphics.getCanvas()
+			love.graphics.setCanvas(myself.finalCanvas)
+			love.graphics.clear()
 
-		love.graphics.setColor(1,1,1)
-		love.graphics.draw(myself.mannequinFront, 100, 240, 0, 1,1 , 192/2, 192)
-		love.graphics.draw(myself.mannequinBack, 300, 240, 0, 1,1 , 192/2, 192)
+			love.graphics.setColor(1,1,1)
+			love.graphics.draw(myself.mannequinFront, 100, 240, 0, 1,1 , 192/2, 192)
+			love.graphics.draw(myself.mannequinBack, 300, 240, 0, 1,1 , 192/2, 192)
 
-		love.graphics.setBlendMode('multiply', 'premultiplied')
-		love.graphics.draw(mannequinShading, 100, 240, 0, 1,1 , 192/2, 192)
-		love.graphics.draw(mannequinShading, 300, 240, 0, 1,1 , 192/2, 192)
-		love.graphics.setBlendMode('alpha')
-		love.graphics.setCanvas(oldCanvas)
+			love.graphics.setBlendMode('multiply', 'premultiplied')
+			love.graphics.draw(mannequinShading, 100, 240, 0, 1,1 , 192/2, 192)
+			love.graphics.draw(mannequinShading, 300, 240, 0, 1,1 , 192/2, 192)
+			love.graphics.setBlendMode('alpha')
+			love.graphics.setCanvas(oldCanvas)
+		else
+			love.graphics.draw(editor.patternCanvas, 200, 120, 0, 6, 6, 16, 16)
+		end
 
 		love.graphics.draw(myself.finalCanvas)
 	end

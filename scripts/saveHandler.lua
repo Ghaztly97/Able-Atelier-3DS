@@ -24,7 +24,7 @@ Pattern Types:
 	0x00 = LongSleeveDress
 	0x01 = ShortSleeveDress
 	0x02 = SleevelessDress
-	0x03 = LongSleeveShirt
+	0x03 = SleevelessDress
 	0x04 = ShortSleeveShirt
 	0x05 = SleevelessShirt
 	0x06 = HornedHat
@@ -73,16 +73,16 @@ spriteTypes.saveHandler = function()
 	local canvasCamera = camera.new((32*5)/2, (32*2)/2, 2)
 
 	local patternTypes = {
-		[0x00] = 'LongSleeveDress',
-		[0x01] = 'ShortSleeveDress',
-		[0x02] = 'SleevelessDress',
-		[0x03] = 'LongSleeveShirt',
-		[0x04] = 'ShortSleeveShirt',
-		[0x05] = 'SleevelessShirt',
-		[0x06] = 'HornedHat',
-		[0x07] = 'KnitHat',
-		[0x08] = 'PhotoBoard',
-		[0x09] = 'Pattern',
+		[string.char(0x00)] = 'LongSleeveDress',
+		[string.char(0x01)] = 'ShortSleeveDress',
+		[string.char(0x02)] = 'SleevelessDress',
+		[string.char(0x03)] = 'LongSleeveShirt',
+		[string.char(0x04)] = 'ShortSleeveShirt',
+		[string.char(0x05)] = 'SleevelessShirt',
+		[string.char(0x06)] = 'HornedHat',
+		[string.char(0x07)] = 'KnitHat',
+		[string.char(0x08)] = 'PhotoBoard',
+		[string.char(0x09)] = 'Pattern',
 	}
 
 	local playerBlocksBegin = 0xa0
@@ -114,7 +114,8 @@ spriteTypes.saveHandler = function()
 		local parsedData = {
 			patternName = readBytes(patternStart, patternStart + 0x029, {cutZeroes = true, utf8_safe = true}),
 			patternCreator = readBytes(patternStart+0x2c, patternStart+0x03d, {cutZeroes = true, utf8_safe = true}),
-			patternType = readBytes(patternStart+0x069, patternStart+0x069),
+			--0x069		  (  1) = Pattern Type 
+			patternType = patternTypes[readBytes(patternStart+0x069, patternStart+0x069)],
 
 			patternData1 = readBytes(patternStart+0x6c, patternStart+0x26b),
 			patternData2 = readBytes(patternStart+0x26c, patternStart+0x46b),

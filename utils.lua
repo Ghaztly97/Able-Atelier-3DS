@@ -151,3 +151,12 @@ function lerp(t, a, b, easing)
 
     return a + (b - a) * e
 end
+
+function tableContains(table, search)
+    for i, item in pairs(table) do
+        if item == search then
+            return true
+        end
+    end
+    return false
+end

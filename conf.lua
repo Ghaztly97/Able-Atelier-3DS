@@ -1,3 +1,5 @@
 function love.conf(t)
-	t.system.speedup = true
+	if love._os == 'horizon' then
+		t.system.speedup = true
+	end
 end

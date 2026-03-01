@@ -888,6 +888,7 @@ spriteTypes.toolsPanel = function(x, y)
 						if received == 1 then
 							editor:destroy()
 							mannequinRender:destroy()
+							undoRedo:destroy()
 							coroutine.yield()
 
 							-- try removing references for garbagecollect

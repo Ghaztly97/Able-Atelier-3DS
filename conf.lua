@@ -1,3 +1,3 @@
 function love.conf(t)
-	t.speedup = true
+	t.system.speedup = true
 end

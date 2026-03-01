@@ -595,14 +595,22 @@ spriteTypes.patternRenderAndEditor = function()
 				if snapshot then
 					myself.undoPointer = myself.undoPointer + 1
 					local oldPixelTable = tableToPatternString(myself.activeEditor)
+					local data1 = tableToPatternString(currentPatternState.data1)
+					local data2 = tableToPatternString(currentPatternState.data2)
+					local packet = {
+						oldPixelTable = patternStringToTable(oldPixelTable), -- for the current active bottom screen editor
+						data1 = patternStringToTable(data1), -- to update mannequins
+						data2 = patternStringToTable(data2),
+					}
+
 					currentPatternState.data1 = patternStringToTable(snapshot.data1)
 					currentPatternState.data2 = patternStringToTable(snapshot.data2)
 					currentPatternState.data3 = patternStringToTable(snapshot.data3)
 					currentPatternState.data4 = patternStringToTable(snapshot.data4)
 					myself.activeEditor = currentPatternState.data1
 
-					broadcast('mannequinUpdate')
-					broadcast('updateCanvas', {oldPixelTable = patternStringToTable(oldPixelTable)})
+					broadcast('mannequinUpdate', packet)
+					broadcast('updateCanvas', packet)
 				end
 			end
 			if receive('redo') then
@@ -610,14 +618,22 @@ spriteTypes.patternRenderAndEditor = function()
 				if snapshot then
 					myself.undoPointer = myself.undoPointer - 1
 					local oldPixelTable = tableToPatternString(myself.activeEditor)
+					local data1 = tableToPatternString(currentPatternState.data1)
+					local data2 = tableToPatternString(currentPatternState.data2)
+					local packet = {
+						oldPixelTable = patternStringToTable(oldPixelTable), -- for the current active bottom screen editor
+						data1 = patternStringToTable(data1), -- to update mannequins
+						data2 = patternStringToTable(data2),
+					}
+
 					currentPatternState.data1 = patternStringToTable(snapshot.data1)
 					currentPatternState.data2 = patternStringToTable(snapshot.data2)
 					currentPatternState.data3 = patternStringToTable(snapshot.data3)
 					currentPatternState.data4 = patternStringToTable(snapshot.data4)
 					myself.activeEditor = currentPatternState.data1
 
-					broadcast('mannequinUpdate')
-					broadcast('updateCanvas', {oldPixelTable = patternStringToTable(oldPixelTable)})
+					broadcast('mannequinUpdate', packet)
+					broadcast('updateCanvas', packet)
 				end
 			end
 			coroutine.yield()
@@ -638,7 +654,7 @@ spriteTypes.mannequinRender = function()
 	myself.mannequinFront = love.graphics.newCanvas(192, 192)
 	myself.mannequinBack = love.graphics.newCanvas(192, 192)
 
-	local function refreshMannequin(pixelTable, pallet, canvas)
+	local function refreshMannequin(pixelTable, pallet, canvas, isUndoRedo, oldPixelTable)
 		local oldCanvas = love.graphics.getCanvas()
 		local x = 1
 		local y = 1
@@ -646,7 +662,7 @@ spriteTypes.mannequinRender = function()
 		love.graphics.setColor(1,1,1)
 		--love.graphics.rectangle('line', 0, 0, 128+64, 128+64)
 		for i, pixel in ipairs(pixelTable) do
-			love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+			
 			local vertices = {}
 
 			local index = i
@@ -669,7 +685,15 @@ spriteTypes.mannequinRender = function()
 			local index = i + 32
 			vertices[7], vertices[8] = vertices3d[index].x, vertices3d[index].y
 
-			love.graphics.polygon('fill', vertices)
+			if isUndoRedo then
+				if oldPixelTable[i] ~= pixel then
+					love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+					love.graphics.polygon('fill', vertices)
+				end
+			else
+				love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+				love.graphics.polygon('fill', vertices)
+			end
 
 			x = x + 1
 			if x > 32 then
@@ -684,9 +708,15 @@ spriteTypes.mannequinRender = function()
 	local mannequinShading = love.graphics.newCanvas(192, 192)
 	myself.extraDraw = function()
 		love.graphics.setColor(1,1,1)
-		if myself.mannequinUpdate then
-			refreshMannequin(currentPatternState.data1, currentPatternState.pallet, myself.mannequinFront)
-			refreshMannequin(currentPatternState.data2, currentPatternState.pallet, myself.mannequinBack)
+		local mannequinUpdate = receive('mannequinUpdate')
+		if mannequinUpdate then
+			if type(mannequinUpdate) == 'table' then
+				refreshMannequin(currentPatternState.data1, currentPatternState.pallet, myself.mannequinFront, true, mannequinUpdate.data1)
+				refreshMannequin(currentPatternState.data2, currentPatternState.pallet, myself.mannequinBack, true, mannequinUpdate.data2)
+			else
+				refreshMannequin(currentPatternState.data1, currentPatternState.pallet, myself.mannequinFront)
+				refreshMannequin(currentPatternState.data2, currentPatternState.pallet, myself.mannequinBack)
+			end
 
 			local oldCanvas = love.graphics.getCanvas()
 			love.graphics.setCanvas(mannequinShading)
@@ -715,13 +745,6 @@ spriteTypes.mannequinRender = function()
 
 		love.graphics.draw(myself.finalCanvas)
 	end
-
-	scripts.receive = coroutine.create(function() 
-		while true do
-			myself.mannequinUpdate = receive('mannequinUpdate')
-			coroutine.yield()
-		end
-	end)
 
 	myself.scripts = scripts
 	return myself

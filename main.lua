@@ -13,6 +13,7 @@ function love.load()
 
 	require 'utils'
 	require 'bit'
+	utf8 = require 'utf8'
 	HC = require 'libraries/HC'
 	camera = require 'libraries/camera'
 	inputs = require 'scripts/inputs'

@@ -402,7 +402,14 @@ spriteTypes.patternRenderAndEditor = function()
 			love.graphics.draw(myself.majorPallet)
 		end
 
-		love.graphics.print(myself.undoPointer)
+		if myself.switchingActiveEditor then
+			love.graphics.setColor(0,0,0,0.5)
+			love.graphics.rectangle('fill', 0, 0, 320, 240)
+			for i, part in ipairs(myself.switchOptions) do
+				love.graphics.setColor(1,1,1)
+				love.graphics.printf(part, 135+math.cos((i/4)*math.pi*2)*50, 120+math.sin((i/4)*math.pi*2)*50, 50, 'center')
+			end
+		end
 	end
 
 	myself.updateCanvas = false
@@ -431,6 +438,25 @@ spriteTypes.patternRenderAndEditor = function()
 					data3 = tableToPatternString(currentPatternState.data3),
 					data4 = tableToPatternString(currentPatternState.data4)
 				}
+
+				if saveData_parsed.patternType == 'LongSleeveDress' then
+					
+				end
+			end
+			coroutine.yield()
+		end
+	end)
+
+	myself.switchingActiveEditor = false
+	myself.switchOptions = {'Front', 'Back', 'Sleeves', 'Lower Dress'}
+	scripts.switchActiveEditor = coroutine.create(function()
+		while true do
+			if inputs.getAction('x') then
+				myself.switchingActiveEditor = true
+				while inputs.getAction('x') do
+					coroutine.yield()
+				end
+				myself.switchingActiveEditor = false
 			end
 			coroutine.yield()
 		end
@@ -743,6 +769,18 @@ spriteTypes.mannequinRender = function()
 	local showTable = {
 		'LongSleeveDress', 'ShortSleeveDress', 'SleevelessDress', 'ShortSleeveShirt', 'SleevelessShirt'
 	}
+	local glyphs = {
+		dpright = utf8.char(0xe07c),
+		dpleft = utf8.char(0xe07b),
+		dpdown = utf8.char(0xe07a),
+		dpup = utf8.char(0xe079),
+		cpad = utf8.char(0xe077),
+		a = utf8.char(0xe000),
+		y = utf8.char(0xe003)
+	}
+	local font = love.graphics.newFont(18)
+	local defaultfont = love.graphics.newFont()
+	local text = glyphs.dpright..': Rotate view w/ stylus\n'..glyphs.dpleft..': Zoom w/ stylus\n'..glyphs.dpup..': Pan w/ stylus\n'..glyphs.cpad..': Pan w/ C-Pad\n'..glyphs.a..': Open tools panel\n'
 	myself.extraDraw = function()
 		love.graphics.setColor(1,1,1)
 		local mannequinUpdate = receive('mannequinUpdate')
@@ -785,6 +823,18 @@ spriteTypes.mannequinRender = function()
 		end
 
 		love.graphics.draw(myself.finalCanvas)
+
+		love.graphics.setFont(font)
+		love.graphics.printf('Hold '..glyphs.y..' to see controls.', 0, 220, 400, 'center')
+		love.graphics.setFont(defaultfont)
+		if inputs.getAction('y') then
+			love.graphics.setColor(0,0,0,0.5)
+			love.graphics.rectangle('fill', 0, 0, 400, 240)
+			love.graphics.setColor(1,1,1)
+			love.graphics.setFont(font)
+			love.graphics.printf(text,100, 25, 200,"center")
+			love.graphics.setFont(defaultfont)
+		end
 	end
 
 	myself.scripts = scripts

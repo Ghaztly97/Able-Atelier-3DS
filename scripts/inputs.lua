@@ -16,6 +16,9 @@ function inputs.update()
 		state.leftTrigger = love.keyboard.isDown('q')
 		state.start = love.keyboard.isDown('y')
 
+		state.y = love.keyboard.isDown('j')
+		state.x = love.keyboard.isDown('i')
+
 		state.stick = {
 			dx = 0,
 			dy = 0
@@ -45,6 +48,9 @@ function inputs.update()
 		state.cancel = gamepad:isGamepadDown("b")
 		state.leftTrigger = gamepad:isGamepadDown("leftshoulder")
 		state.start = gamepad:isGamepadDown("start")
+
+		state.y = gamepad:isGamepadDown("y")
+		state.x = gamepad:isGamepadDown("x")
 
 		state.stick = {
 			dx = leftx,

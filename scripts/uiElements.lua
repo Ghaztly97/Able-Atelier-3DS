@@ -76,6 +76,7 @@ spriteTypes.fileTree = function(x, y, opts)
 		return output
 	end
 
+	local viewY = 0
 	local fileTree = setUpFileTree(love.filesystem.getDirectoryItems(currentDirectory))
 
 	myself.extraDraw = function(screen)
@@ -89,8 +90,9 @@ spriteTypes.fileTree = function(x, y, opts)
 			else
 				love.graphics.print('/..', 30, 15)
 			end
-			for i, item in ipairs(fileTree) do
-				if i > 14 then
+			for i = 1 + viewY, #fileTree do
+				local item = fileTree[i]
+				if i - viewY > 14 then
 					break
 				end
 				if item.type == 'directory' then
@@ -105,9 +107,9 @@ spriteTypes.fileTree = function(x, y, opts)
 				end
 
 				if i == selection then
-					love.graphics.print(item.name, 30, 15+i*12.5)
+					love.graphics.print(item.name, 30, 15+(i - viewY)*12.5)
 				else
-					love.graphics.print(item.name, 15, 15+i*12.5)
+					love.graphics.print(item.name, 15, 15+(i - viewY)*12.5)
 				end
 			end
 			love.graphics.setColor(1,1,1)
@@ -120,13 +122,18 @@ spriteTypes.fileTree = function(x, y, opts)
 	scripts.navigate = coroutine.create(function() 
 		while true do
 			if inputs.getAction('up') then
+				if selection - viewY == 1 then
+					viewY = clamp(viewY - 1, 0, #fileTree - 14)
+				end
 				selection = clamp(selection - 1, 0, #fileTree)
 				while inputs.getAction('up') do
 					coroutine.yield()
 				end
 			end
-
 			if inputs.getAction('down') then
+				if selection - viewY == 14 then
+					viewY = clamp(viewY + 1, 0, #fileTree - 14)
+				end
 				selection = clamp(selection + 1, 0, #fileTree)
 				while inputs.getAction('down') do
 					coroutine.yield()
@@ -173,6 +180,7 @@ spriteTypes.fileTree = function(x, y, opts)
 
 			if inputs.getAction('cancel') then
 				local endIndex = #currentDirectory
+				viewY = 0
 				for i = #currentDirectory, 1, -1 do
 					if string.sub(currentDirectory, i, i) == '/' then
 						endIndex = i-1
@@ -317,7 +325,7 @@ spriteTypes.patternRenderAndEditor = function()
 					love.graphics.rectangle('fill', x-1, y-1, 2, 2)
 					for py = -1, 0 do
 						for px = -1, 0 do
-							if x + px < 32 and x + px > 0 and  y + py < 32 and y + py > 0 then
+							if x + px <= 32 and x + px >= 0 and  y + py <= 32 and y + py >= 0 then
 								myself.activeEditor[(y+py)*32+(x+px)+1] = myself.selectedColor-1
 							end
 						end
@@ -327,7 +335,7 @@ spriteTypes.patternRenderAndEditor = function()
 					love.graphics.rectangle('fill', x-1, y-1, 3, 3)
 					for py = -1, 1 do
 						for px = -1, 1 do
-							if x + px < 32 and x + px > 0 and  y + py < 32 and y + py > 0 then
+							if x + px <= 32 and x + px >= 0 and  y + py <= 32 and y + py >= 0 then
 								myself.activeEditor[(y+py)*32+(x+px)+1] = myself.selectedColor-1
 							end
 						end

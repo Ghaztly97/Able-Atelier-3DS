@@ -280,7 +280,7 @@ spriteTypes.patternRenderAndEditor = function()
 				for x = 16, 16 do
 					local index = (y-1)*16+x
 					love.graphics.setColor(hex(colors[index]))
-					love.graphics.rectangle('fill', 15+x*15, 9.5+y*12.5, 15, 10)
+					love.graphics.rectangle('fill', 15+(11)*15, 9.5+y*12.5, 15, 10)
 				end
 			end
 
@@ -325,7 +325,7 @@ spriteTypes.patternRenderAndEditor = function()
 					love.graphics.rectangle('fill', x-1, y-1, 2, 2)
 					for py = -1, 0 do
 						for px = -1, 0 do
-							if x + px <= 32 and x + px >= 0 and  y + py <= 32 and y + py >= 0 then
+							if x + px < 32 and x + px > 0 and  y + py <= 32 and y + py >= 0 then
 								myself.activeEditor[(y+py)*32+(x+px)+1] = myself.selectedColor-1
 							end
 						end
@@ -335,7 +335,7 @@ spriteTypes.patternRenderAndEditor = function()
 					love.graphics.rectangle('fill', x-1, y-1, 3, 3)
 					for py = -1, 1 do
 						for px = -1, 1 do
-							if x + px <= 32 and x + px >= 0 and  y + py <= 32 and y + py >= 0 then
+							if x + px < 32 and x + px > 0 and  y + py <= 32 and y + py >= 0 then
 								myself.activeEditor[(y+py)*32+(x+px)+1] = myself.selectedColor-1
 							end
 						end
@@ -424,6 +424,13 @@ spriteTypes.patternRenderAndEditor = function()
 				myself.activeEditor = currentPatternState.data1
 				broadcast('mannequinUpdate')
 				broadcast('updateCanvas')
+
+				myself.history[#myself.history + 1] = {
+					data1 = tableToPatternString(currentPatternState.data1),
+					data2 = tableToPatternString(currentPatternState.data2),
+					data3 = tableToPatternString(currentPatternState.data3),
+					data4 = tableToPatternString(currentPatternState.data4)
+				}
 			end
 			coroutine.yield()
 		end
@@ -493,8 +500,8 @@ spriteTypes.patternRenderAndEditor = function()
 		end
 
 		for y=1, 15 do
-			for x = 16, 16 do
-				local index = (y-1)*16+x
+			for x = 11, 11 do
+				local index = (y-1)*16+(16)
 				local hitbox = HC.rectangle(15+x*15, 9.5+y*12.5, 15, 10)
 				hitbox.index = index
 				table.insert(largePalletHitboxes, hitbox)
@@ -556,6 +563,25 @@ spriteTypes.patternRenderAndEditor = function()
 		while true do
 			if inputs.getAction('start') then
 				broadcast('saveEditedFile', currentPatternState)
+				toolsPanel:destroy()
+				mannequinRender:destroy()
+				undoRedo:destroy()
+				coroutine.yield()
+
+				-- try removing references for garbagecollect
+				-- fix this shit later so that canvases are just reused
+				keyInstances.editor = nil
+				keyInstances.mannequinRender = nil
+				keyInstances.toolsPanel = nil
+
+				editor = nil
+				mannequinRender = nil
+				toolsPanel = nil
+
+				coroutine.yield()
+				collectgarbage('collect')
+				coroutine.yield()
+				myself:destroy()
 				while inputs.getAction('start') do
 					coroutine.yield()
 				end
@@ -571,7 +597,7 @@ spriteTypes.patternRenderAndEditor = function()
 			if touch.down and not myself.debounce then
 				local x, y = canvasView:worldCoords(touch.x, touch.y)
 				x, y = math.floor(x), math.floor(y)
-				if not (x < 0 or x > 32 or y < 0 or y > 31) then
+				if not (x < 0 or x > 32 or y < 0 or y > 31) and not (undoRedo.hitboxes[1]:contains(touch.x, touch.y) or undoRedo.hitboxes[2]:contains(touch.x, touch.y)) then
 					if myself.undoPointer ~= 0 then
 						local start = #myself.history - myself.undoPointer + 1
 						for i = start, #myself.history do
@@ -931,7 +957,7 @@ spriteTypes.undoRedo = function(x, y)
 	myself.screen = 'bottom'
 
 	local arrow = love.graphics.newImage('assets/images/arrow.png')
-	local hitboxes = {
+	myself.hitboxes = {
 		HC.rectangle(320-70, 205, 35, 30),
 		HC.rectangle(320-35, 205, 35, 30),
 	}
@@ -945,8 +971,8 @@ spriteTypes.undoRedo = function(x, y)
 		
 		love.graphics.setColor(1,1,1)
 
-		for i, hitbox in ipairs(hitboxes) do
-			hitbox:draw('line')
+		for i, hitbox in ipairs(myself.hitboxes) do
+		--	hitbox:draw('line')
 		end
 	end
 
@@ -955,10 +981,10 @@ spriteTypes.undoRedo = function(x, y)
 		while true do
 			if touch.down and not myself.debounce then
 				local clicked = false
-				if hitboxes[1]:contains(touch.x, touch.y) then --undo
+				if myself.hitboxes[1]:contains(touch.x, touch.y) then --undo
 					clicked = true
 					broadcast('undo')
-				elseif hitboxes[2]:contains(touch.x, touch.y) then --redo
+				elseif myself.hitboxes[2]:contains(touch.x, touch.y) then --redo
 					clicked = true
 					broadcast('redo')
 				else

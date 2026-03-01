@@ -177,6 +177,11 @@ function love.draw(screen)
 		love.graphics.rectangle('line', 0, 0, 320, 240)
 		--love.graphics.print(love.timer.getFPS())
 
+		if touch.down then
+			love.graphics.setColor(1,0,0)
+			love.graphics.circle('fill', touch.x, touch.y, 5)
+		end
+		love.graphics.setColor(1,1,1)
 		love.graphics.rectangle('fill', 20, 215, 280*(killTime/0.5), 10)
 	end
 end

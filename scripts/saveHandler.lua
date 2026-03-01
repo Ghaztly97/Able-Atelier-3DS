@@ -344,9 +344,6 @@ spriteTypes.saveHandler = function()
 		while true do
 			local received = receive('saveEditedFile')
 			if received then
-				keyInstances.editor:destroy()
-				keyInstances.mannequinRender:destroy()
-				keyInstances.toolsPanel:destroy()
 				local patternStart = playerBlocksBegin + (playerBlockSize*(selectedPlayer-1)) + (patternBlockSize*(selectedPattern-1)) + 0x2c
 				local currentPatternState = received
 				-- 0x058 - 0x066 ( 15) = Palette Indexes
@@ -359,7 +356,7 @@ spriteTypes.saveHandler = function()
 				end
 				stepString = 'Saving New Pallet...'
 				coroutine.yield()
-				globalSave =replaceChars(globalSave, patternStart + 0x059, patternStart + 0x067, newPalletString)
+				globalSave = replaceChars(globalSave, patternStart + 0x059, patternStart + 0x067, newPalletString)
 
 				stepString = 'Saving Pattern Data...'
 				coroutine.yield()

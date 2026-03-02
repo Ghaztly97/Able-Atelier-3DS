@@ -349,45 +349,74 @@ spriteTypes.patternRenderAndEditor = function()
 					love.graphics.setCanvas(mannequinRender.mannequinFront)
 				elseif myself.activeEditor == currentPatternState.data2 then
 					love.graphics.setCanvas(mannequinRender.mannequinBack)
-				else
-					love.graphics.setCanvas(mannequinRender.mannequinFront)
 				end
+				if myself.activeEditor == currentPatternState.data1 or myself.activeEditor == currentPatternState.data2 then
+					vertices = {}
+					if myself.penSize == 1 then
+						vertices[1], vertices[2] = shapeVertices(x+1, y)
+						vertices[3], vertices[4] = shapeVertices(x+2, y)
+						vertices[5], vertices[6] = shapeVertices(x+2, y+1)
+						vertices[7], vertices[8] = shapeVertices(x+1, y+1)
+					elseif myself.penSize == 2 then
+						vertices[1], vertices[2] = shapeVertices(x, y-1)
+						vertices[3], vertices[4] = shapeVertices(x+1, y-1)
+						vertices[5], vertices[6] = shapeVertices(x+2, y-1)
 
-				vertices = {}
-				if myself.penSize == 1 then
-					vertices[1], vertices[2] = shapeVertices(x+1, y)
-					vertices[3], vertices[4] = shapeVertices(x+2, y)
-					vertices[5], vertices[6] = shapeVertices(x+2, y+1)
-					vertices[7], vertices[8] = shapeVertices(x+1, y+1)
-				elseif myself.penSize == 2 then
-					vertices[1], vertices[2] = shapeVertices(x, y-1)
-					vertices[3], vertices[4] = shapeVertices(x+1, y-1)
-					vertices[5], vertices[6] = shapeVertices(x+2, y-1)
+						vertices[7], vertices[8] = shapeVertices(x+2, y+1)
+						vertices[9], vertices[10] = shapeVertices(x+1, y+1)
+						vertices[9], vertices[10] = shapeVertices(x, y+1)
+					elseif myself.penSize == 3 then
+						vertices[1], vertices[2] = shapeVertices(x, y-1)
+						vertices[3], vertices[4] = shapeVertices(x+1, y-1)
+						vertices[5], vertices[6] = shapeVertices(x+2, y-1)
+						vertices[7], vertices[8] = shapeVertices(x+3, y-1)
 
-					vertices[7], vertices[8] = shapeVertices(x+2, y+1)
-					vertices[9], vertices[10] = shapeVertices(x+1, y+1)
-					vertices[9], vertices[10] = shapeVertices(x, y+1)
-				elseif myself.penSize == 3 then
-					vertices[1], vertices[2] = shapeVertices(x, y-1)
-					vertices[3], vertices[4] = shapeVertices(x+1, y-1)
-					vertices[5], vertices[6] = shapeVertices(x+2, y-1)
-					vertices[7], vertices[8] = shapeVertices(x+3, y-1)
+						vertices[9], vertices[10] = shapeVertices(x+3, y+2)
+						vertices[11], vertices[12] = shapeVertices(x+2, y+2)
+						vertices[13], vertices[14] = shapeVertices(x+1, y+2)
+						vertices[15], vertices[16] = shapeVertices(x, y+2)
+					end
 
-					vertices[9], vertices[10] = shapeVertices(x+3, y+2)
-					vertices[11], vertices[12] = shapeVertices(x+2, y+2)
-					vertices[13], vertices[14] = shapeVertices(x+1, y+2)
-					vertices[15], vertices[16] = shapeVertices(x, y+2)
+					love.graphics.polygon('fill', vertices)
+					love.graphics.setColor(1,1,1)
+
+					love.graphics.setCanvas(oldCanvas)
+
 				end
-
-				love.graphics.polygon('fill', vertices)
-				love.graphics.setColor(1,1,1)
-
-				love.graphics.setCanvas(oldCanvas)
 			end
 		end
 
 		canvasView:attach()
+		love.graphics.setColor(1,1,1)
 		love.graphics.draw(myself.patternCanvas, 0, 0, 0)
+		if myself.activeEditor == currentPatternState.data3 and (saveData_parsed.patternType == 'ShortSleeveDress' or saveData_parsed.patternType == 'ShortSleeveShirt') then
+			love.graphics.setLineWidth(0.01)
+			love.graphics.setColor(1, 0, 0)
+			love.graphics.line(0, 16, 32, 16)
+			love.graphics.setColor(0, 0, 1)
+			love.graphics.line(0, 0, 0, 32)
+			love.graphics.setColor(1, 1, 0)
+			love.graphics.line(16, 0, 16, 32)
+			love.graphics.setLineWidth(1)
+		elseif myself.activeEditor == currentPatternState.data3 and (saveData_parsed.patternType == 'LongSleeveDress' or saveData_parsed.patternType == 'LongSleeveShirt') then
+			love.graphics.setLineWidth(0.01)
+			love.graphics.setColor(1, 0, 0)
+			love.graphics.line(0, 16, 32, 16)
+			love.graphics.setColor(0, 0, 1)
+			love.graphics.line(0, 0, 0, 32)
+			love.graphics.setColor(1, 1, 0)
+			love.graphics.line(32, 0, 32, 32)
+			love.graphics.setLineWidth(1)
+		elseif myself.activeEditor == currentPatternState.data4 and (saveData_parsed.patternType == 'LongSleeveDress' or saveData_parsed.patternType == 'ShortSleeveDress' or saveData_parsed.patternType == 'SleevelessDress') then
+			love.graphics.setLineWidth(0.01)
+			love.graphics.setColor(1, 0, 0)
+			love.graphics.line(0, 16, 32, 16)
+			love.graphics.setColor(0, 0, 1)
+			love.graphics.line(0, 0, 0, 32)
+			love.graphics.setColor(1, 1, 0)
+			love.graphics.line(32, 0, 32, 32)
+			love.graphics.setLineWidth(1)
+		end
 		love.graphics.setColor(1,1,1)
 		
 		canvasView:detach()
@@ -406,7 +435,11 @@ spriteTypes.patternRenderAndEditor = function()
 			love.graphics.setColor(0,0,0,0.5)
 			love.graphics.rectangle('fill', 0, 0, 320, 240)
 			for i, part in ipairs(myself.switchOptions) do
-				love.graphics.setColor(1,1,1)
+				if i ~= myself.switchSelection then
+					love.graphics.setColor(1,1,1)
+				else
+					love.graphics.setColor(1,1,0)
+				end
 				love.graphics.printf(part, 135+math.cos((i/4)*math.pi*2)*50, 120+math.sin((i/4)*math.pi*2)*50, 50, 'center')
 			end
 		end
@@ -436,27 +469,57 @@ spriteTypes.patternRenderAndEditor = function()
 					data1 = tableToPatternString(currentPatternState.data1),
 					data2 = tableToPatternString(currentPatternState.data2),
 					data3 = tableToPatternString(currentPatternState.data3),
-					data4 = tableToPatternString(currentPatternState.data4)
+					data4 = tableToPatternString(currentPatternState.data4),
+					viewedTextureBlob = 1
 				}
 
-				if saveData_parsed.patternType == 'LongSleeveDress' then
-					
+				if saveData_parsed.patternType == 'LongSleeveDress' or saveData_parsed.patternType == 'ShortSleeveDress' then
+					myself.switchOptions = {'Front', 'Back', 'Sleeves', 'Lower Dress'}
+				elseif saveData_parsed.patternType == 'LongSleeveShirt' or saveData_parsed.patternType == 'ShortSleeveShirt' then
+					myself.switchOptions = {'Front', 'Back', 'Sleeves', 'UNUSED'}
+				elseif saveData_parsed.patternType == 'SleevelessDress' then
+					myself.switchOptions = {'Front', 'Back', 'UNUSED', 'Lower Dress'}
+				elseif saveData_parsed.patternType == 'SleevelessShirt' then
+					myself.switchOptions = {'Front', 'Back', 'UNUSED', 'UNUSED'}
 				end
 			end
 			coroutine.yield()
 		end
 	end)
 
+	myself.viewedTextureBlob = 1
 	myself.switchingActiveEditor = false
-	myself.switchOptions = {'Front', 'Back', 'Sleeves', 'Lower Dress'}
+	myself.switchOptions = {}
 	scripts.switchActiveEditor = coroutine.create(function()
 		while true do
 			if inputs.getAction('x') then
+				myself.debounce = true
 				myself.switchingActiveEditor = true
+				myself.switchSelection = 0
 				while inputs.getAction('x') do
+					myself.switchSelection = 0
+					if inputs.getAction('down') then
+						myself.switchSelection = 1
+					end
+					if inputs.getAction('left') then
+						myself.switchSelection = 2
+					end
+					if inputs.getAction('up') then
+						myself.switchSelection = 3
+					end
+					if inputs.getAction('right') then
+						myself.switchSelection = 4
+					end
 					coroutine.yield()
 				end
+				if myself.switchSelection ~= 0 then
+					myself.viewedTextureBlob = myself.switchSelection
+					--myself.history[#myself.history].viewedTextureBlob = myself.viewedTextureBlob
+					myself.activeEditor = currentPatternState['data'..myself.switchSelection]
+					broadcast('updateCanvas')
+				end
 				myself.switchingActiveEditor = false
+				myself.debounce = false
 			end
 			coroutine.yield()
 		end
@@ -634,11 +697,15 @@ spriteTypes.patternRenderAndEditor = function()
 					while touch.down do
 						coroutine.yield()
 					end
+					if myself.history[#myself.history].viewedTextureBlob ~= myself.viewedTextureBlob then
+						myself.history[#myself.history].viewedTextureBlob = myself.viewedTextureBlob
+					end
 					myself.history[#myself.history + 1] = {
 						data1 = tableToPatternString(currentPatternState.data1),
 						data2 = tableToPatternString(currentPatternState.data2),
 						data3 = tableToPatternString(currentPatternState.data3),
-						data4 = tableToPatternString(currentPatternState.data4)
+						data4 = tableToPatternString(currentPatternState.data4),
+						viewedTextureBlob = myself.viewedTextureBlob
 					}
 					if #myself.history > 5 then
 						table.remove(myself.history, 1)
@@ -648,7 +715,7 @@ spriteTypes.patternRenderAndEditor = function()
 			coroutine.yield()
 		end
 	end)
-	scripts.undoRedo = coroutine.create(function() 
+	scripts.undoRedo = coroutine.create(function()
 		while true do
 			if receive('undo') then
 				local snapshot = myself.history[#myself.history - (myself.undoPointer + 1)]
@@ -667,7 +734,7 @@ spriteTypes.patternRenderAndEditor = function()
 					currentPatternState.data2 = patternStringToTable(snapshot.data2)
 					currentPatternState.data3 = patternStringToTable(snapshot.data3)
 					currentPatternState.data4 = patternStringToTable(snapshot.data4)
-					myself.activeEditor = currentPatternState.data1
+					myself.activeEditor = currentPatternState['data'..snapshot.viewedTextureBlob]
 
 					broadcast('mannequinUpdate', packet)
 					broadcast('updateCanvas', packet)
@@ -690,7 +757,7 @@ spriteTypes.patternRenderAndEditor = function()
 					currentPatternState.data2 = patternStringToTable(snapshot.data2)
 					currentPatternState.data3 = patternStringToTable(snapshot.data3)
 					currentPatternState.data4 = patternStringToTable(snapshot.data4)
-					myself.activeEditor = currentPatternState.data1
+					myself.activeEditor = currentPatternState['data'..snapshot.viewedTextureBlob]
 
 					broadcast('mannequinUpdate', packet)
 					broadcast('updateCanvas', packet)
@@ -776,11 +843,14 @@ spriteTypes.mannequinRender = function()
 		dpup = utf8.char(0xe079),
 		cpad = utf8.char(0xe077),
 		a = utf8.char(0xe000),
-		y = utf8.char(0xe003)
+		y = utf8.char(0xe003),
+		x = utf8.char(0xe002),
+		dpad = utf8.char(0xe006),
 	}
 	local font = love.graphics.newFont(18)
 	local defaultfont = love.graphics.newFont()
 	local text = glyphs.dpright..': Rotate view w/ stylus\n'..glyphs.dpleft..': Zoom w/ stylus\n'..glyphs.dpup..': Pan w/ stylus\n'..glyphs.cpad..': Pan w/ C-Pad\n'..glyphs.a..': Open tools panel\n'
+		..'Hold '..glyphs.x..' and use '..glyphs.dpad..' to change active editor. Release '..glyphs.x..' while staying on selection to finish.'
 	myself.extraDraw = function()
 		love.graphics.setColor(1,1,1)
 		local mannequinUpdate = receive('mannequinUpdate')

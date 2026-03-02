@@ -24,7 +24,7 @@ Pattern Types:
 	0x00 = LongSleeveDress
 	0x01 = ShortSleeveDress
 	0x02 = SleevelessDress
-	0x03 = SleevelessDress
+	0x03 = LongSleeveShirt
 	0x04 = ShortSleeveShirt
 	0x05 = SleevelessShirt
 	0x06 = HornedHat
@@ -122,6 +122,7 @@ spriteTypes.saveHandler = function()
 			patternData3 = readBytes(patternStart+0x46c, patternStart+0x66b),
 			patternData4 = readBytes(patternStart+0x66c, patternStart+0x86b),
 		}
+		print(parsedData.patternType)
 		parsedData.pallet = {}
 		for i=0, 14 do -- build pallet
 			local byte = patternStart+0x58 + i

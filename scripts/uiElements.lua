@@ -143,6 +143,7 @@ spriteTypes.fileTree = function(x, y, opts)
 			if inputs.getAction('select') then
 				if selection ~= 0 then
 					if fileTree[selection].type == 'directory' then
+						viewY = 0
 						currentDirectory = currentDirectory..'/'..fileTree[selection].name
 						fileTree = setUpFileTree(love.filesystem.getDirectoryItems(currentDirectory))
 						selection = 1

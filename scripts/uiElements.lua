@@ -850,8 +850,9 @@ spriteTypes.mannequinRender = function()
 	}
 	local font = love.graphics.newFont(18)
 	local defaultfont = love.graphics.newFont()
-	local text = glyphs.dpright..': Rotate view w/ stylus\n'..glyphs.dpleft..': Zoom w/ stylus\n'..glyphs.dpup..': Pan w/ stylus\n'..glyphs.cpad..': Pan w/ C-Pad\n'..glyphs.a..': Open tools panel\n'
-		..'Hold '..glyphs.x..' and use '..glyphs.dpad..' to change active editor. Release '..glyphs.x..' while staying on selection to finish.'
+	local text = '- '..glyphs.dpright..': Rotate view w/ stylus\n'..'- '..glyphs.dpleft..': Zoom w/ stylus\n'..'- '..glyphs.dpup..': Pan w/ stylus\n'..'- '..glyphs.cpad..': Pan w/ C-Pad\n'..'- '..glyphs.a..': Open tools panel\n'
+		..'- Hold '..glyphs.x..' and use '..glyphs.dpad..' to change active editor. Release '..glyphs.x..' while staying on selection to finish.\n'
+		..'- Press START to save.\n- Hold SELECT to quit.'
 	myself.extraDraw = function()
 		love.graphics.setColor(1,1,1)
 		local mannequinUpdate = receive('mannequinUpdate')
@@ -903,7 +904,7 @@ spriteTypes.mannequinRender = function()
 			love.graphics.rectangle('fill', 0, 0, 400, 240)
 			love.graphics.setColor(1,1,1)
 			love.graphics.setFont(font)
-			love.graphics.printf(text,100, 25, 200,"center")
+			love.graphics.printf(text,75, 0, 250,"center")
 			love.graphics.setFont(defaultfont)
 		end
 	end
@@ -959,6 +960,8 @@ spriteTypes.toolsPanel = function(x, y)
 			love.graphics.print('2', myself.x + 60+5 + 5, myself.y + 10 + 2.5, 0)
 			love.graphics.draw(icons.pencil, myself.x + 5 + 12.5, myself.y + 45 + 10 + 33, (-5/4)*math.pi, 1, 1, 40, 4)
 			love.graphics.print('3', myself.x + 5 + 5, myself.y + 45 + 10 + 2.5, 0)
+
+			love.graphics.print('QUIT', myself.x + 10 + 5, myself.y + 45*2 + 10 + 2.5, 0, 2, 2)
 
 			--love.graphics.setColor(1,0,0)
 			--for i, hitbox in ipairs(hitboxes) do

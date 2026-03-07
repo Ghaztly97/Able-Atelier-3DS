@@ -259,7 +259,7 @@ spriteTypes.saveHandler = function()
 				end
 				
 				broadcast('removeFiletree')
-				stepString = 'Copy of your save file was saved to:\n'..love.filesystem.getSaveDirectory()..'backups/'..saveFolderName..'\n(press A to continue...)'
+				stepString = 'Copy of your save file was saved to:\n'..love.filesystem.getSaveDirectory()..'/backups/'..saveFolderName..'\n(press A to continue...)'
 				while not inputs.getAction('select') do
 					coroutine.yield()
 				end

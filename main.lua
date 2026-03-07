@@ -19,6 +19,7 @@ function love.load()
 	inputs = require 'scripts/inputs'
 	spriteTypes = require 'scripts/objects'
 	hex = require('libraries/hexatonic')({error = function(i) print(i) end})
+	json = require 'libraries/json'
 	
 	if love._os == 'Windows' then 
 		local success = love.filesystem.mount('sdmc', 'sd', true)
@@ -37,13 +38,35 @@ function love.load()
 
 	errorLog = {}
 
-	createInstance('fileTree', 0, 0)
-	createInstance('saveHandler', 0, 0)
-	
 	prettyPatterns = {
 		pattern1 = love.graphics.newImage('assets/images/pattern_1.png'),
 		pattern2 = love.graphics.newImage('assets/images/pattern_2.png'),
 	}
+
+	settings = {
+		version = "1.0.1",
+		cullsaves = true
+	}
+	if love.filesystem.getInfo('settings.json') then
+		local content = json.decode(love.filesystem.read('settings.json'))
+		if content.version ~= settings.version then
+			content.version = settings.version
+			for key, value in pairs(settings) do
+				print(type(content[key]))
+				if type(content[key]) == 'nil' then
+					content[key] = value
+				end
+			end
+			love.filesystem.write('settings.json', json.encode(content))
+		end
+		settings = json.decode(love.filesystem.read('settings.json'))
+	else
+		love.filesystem.write('settings.json', json.encode(settings))
+	end
+
+	createInstance('fileTree', 0, 0)
+	createInstance('saveHandler', 0, 0)
+	createInstance('settingsui', 0, 0)
 end
 
 function love.update()

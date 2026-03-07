@@ -33,7 +33,8 @@ end
 
 for _, module in ipairs{
 	'scripts/uiElements',
-	'scripts/saveHandler'
+	'scripts/saveHandler',
+	'scripts/settingsui'
 } do
 	local partial = require(module)
 	for k, v in pairs(partial) do

@@ -254,7 +254,6 @@ spriteTypes.saveHandler = function()
 						for i = 1, #directoryContents - 5 do
 							love.filesystem.remove('backups/'..directoryContents[i]..'/garden_plus.dat')
 							love.filesystem.remove('backups/'..directoryContents[i])
-							
 						end
 					end
 				end

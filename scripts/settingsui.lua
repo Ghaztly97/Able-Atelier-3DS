@@ -78,6 +78,7 @@ spriteTypes.settingsui = function(x, y)
 					local key = clickedHitbox.key
 					if type(settings[key]) == 'boolean' then
 						settings[key] = not settings[key]
+						love.filesystem.write('settings.json', json.encode(settings))
 					end
 					if type(settings[key]) == 'string' then
 						love.keyboard.setTextInput(true)
@@ -90,10 +91,12 @@ spriteTypes.settingsui = function(x, y)
 								settings[key] = myself.textInput
 								coroutine.yield()
 							end
+							love.filesystem.write('settings.json', json.encode(settings))
 						else
 							coroutine.yield()
 							if #myself.textInput ~= 0 then
 								settings[key] = myself.textInput
+								love.filesystem.write('settings.json', json.encode(settings))
 							end
 						end
 						love.keyboard.setTextInput(false)
@@ -113,10 +116,12 @@ spriteTypes.settingsui = function(x, y)
 								settings[key] = tonumber(myself.textInput)
 								coroutine.yield()
 							end
+							love.filesystem.write('settings.json', json.encode(settings))
 						else
 							coroutine.yield()
 							if #myself.textInput ~= 0 and type(tonumber(myself.textInput)) ~= 'nil' then
 								settings[key] = tonumber(myself.textInput)
+								love.filesystem.write('settings.json', json.encode(settings))
 							end
 						end
 						love.keyboard.setTextInput(false)

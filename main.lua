@@ -8,7 +8,7 @@ end
 local killTime = 0
 function love.load()
 	love.graphics.setDefaultFilter('nearest', 'nearest')
-	love.filesystem.setIdentity("ACPatterns")
+	love.filesystem.setIdentity("AbleAtelier")
 	keyInstances = {}
 
 	require 'utils'

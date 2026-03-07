@@ -216,21 +216,51 @@ spriteTypes.saveHandler = function()
 		end
 	end
 
+	local function formatTimeString(date)
+		for key, unit in pairs(date) do
+			formattedUnit = tostring(unit)
+			if #formattedUnit < 4 then
+				for i = 1, 4 - #formattedUnit do
+					formattedUnit = '0'..formattedUnit
+				end
+			end
+			date[key] = formattedUnit
+		end
+
+		return date.year..date.month..date.day..date.hour..date.min..date.sec
+	end
+
 	local directory = ''
 	scripts.loadSave = coroutine.create(function() 
 		while true do
 			local received = receive('loadSave')
 			if received then
 				local date = os.date('*t', os.time())
-				local saveFolderName = 'ACNL_'..date.year..date.month..date.day..date.hour..date.sec
-				love.filesystem.createDirectory(saveFolderName)
+				local saveFolderName = 'ACNL_'..formatTimeString(date)
+				if not love.filesystem.getInfo('backups') then
+					love.filesystem.createDirectory('backups')
+				end
+				love.filesystem.createDirectory('backups/'..saveFolderName)
 
 				directory = received
 				globalSave = love.filesystem.read(directory)
-				love.filesystem.write(saveFolderName..'/garden_plus.dat', globalSave)
+				love.filesystem.write('backups/'..saveFolderName..'/garden_plus.dat', globalSave)
+
+				-- remove older copies
+				if settings.cullsaves then
+					local directoryContents = love.filesystem.getDirectoryItems("backups")
+					printTable(directoryContents)
+					if #directoryContents > 5 then
+						for i = 1, #directoryContents - 5 do
+							love.filesystem.remove('backups/'..directoryContents[i]..'/garden_plus.dat')
+							love.filesystem.remove('backups/'..directoryContents[i])
+							
+						end
+					end
+				end
 				
 				broadcast('removeFiletree')
-				stepString = 'Copy of your save file was saved to:\n'..love.filesystem.getSaveDirectory()..saveFolderName..'\n(press A to continue...)'
+				stepString = 'Copy of your save file was saved to:\n'..love.filesystem.getSaveDirectory()..'backups/'..saveFolderName..'\n(press A to continue...)'
 				while not inputs.getAction('select') do
 					coroutine.yield()
 				end

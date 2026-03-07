@@ -574,6 +574,54 @@ spriteTypes.patternRenderAndEditor = function()
 		end
 	end)
 
+	scripts.resetTransformations = coroutine.create(function()
+		local rotTimer = 0
+		local scaleTimer = 0
+		local panTimer = 0
+		local function tickTimers()
+			rotTimer = clamp(rotTimer - love.timer.getDelta(), 0, math.huge)
+			scaleTimer = clamp(scaleTimer - love.timer.getDelta(), 0, math.huge)
+			panTimer = clamp(panTimer - love.timer.getDelta(), 0, math.huge)
+		end
+		while true do
+			if inputs.getAction('right') and not myself.debounce then
+				if rotTimer == 0 then
+					rotTimer = 0.5
+					while inputs.getAction('right') do
+						tickTimers()
+						coroutine.yield()
+					end
+				else
+					canvasView:rotateTo(0)
+				end
+			end
+			if inputs.getAction('left') and not myself.debounce then
+				if scaleTimer == 0 then
+					scaleTimer = 0.5
+					while inputs.getAction('left') do
+						tickTimers()
+						coroutine.yield()
+					end
+				else
+					canvasView:zoomTo(6)
+				end
+			end
+			if inputs.getAction('up') and not myself.debounce then
+				if panTimer == 0 then
+					panTimer = 0.5
+					while inputs.getAction('up') do
+						tickTimers()
+						coroutine.yield()
+					end
+				else
+					canvasView:lookAt(16, 13)
+				end
+			end
+			tickTimers()
+			coroutine.yield()
+		end
+	end)
+
 	scripts.colorSelect = coroutine.create(function()
 		local palletBarHitboxes = {}
 		local largePalletHitboxes = {}

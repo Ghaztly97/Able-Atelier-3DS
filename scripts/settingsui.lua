@@ -1,5 +1,6 @@
 local spriteTypes = {}
 
+
 spriteTypes.settingsui = function(x, y) 
 	local myself = baseSprite()
 	local scripts = {}
@@ -7,6 +8,7 @@ spriteTypes.settingsui = function(x, y)
 	local prettyKeys = {cullsaves = 'Delete Old Backup Saves', ti = 'Test Text', ni = 'Test Number'}
 	local hitboxes = {}
 	myself.screen = 'bottom'
+	keyInstances.settingsui = myself
 
 	myself.textInput = ''
 	function love.textinput(text)
@@ -63,6 +65,7 @@ spriteTypes.settingsui = function(x, y)
 			if touch.down then
 				if buttonHitbox:contains(touch.x, touch.y) then
 					myself.settingsOpen = not myself.settingsOpen
+					--toggleUiDebounce(myself.settingsOpen)
 				end
 
 				local clickedHitbox = nil

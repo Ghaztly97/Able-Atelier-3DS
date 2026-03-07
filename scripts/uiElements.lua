@@ -311,7 +311,7 @@ spriteTypes.patternRenderAndEditor = function()
 			love.graphics.setCanvas(oldCanvas)
 		end
 
-		if touch.down and not myself.debounce and touch.y > 35 then
+		if touch.down and not myself.debounce and not keyInstances.settingsui.settingsOpen and touch.y > 35 then
 			local oldCanvas = love.graphics.getCanvas()
 			local x, y = canvasView:worldCoords(touch.x, touch.y)
 			if not (x < 0 or x > 32 or y < 0 or y > 31) then
@@ -584,7 +584,7 @@ spriteTypes.patternRenderAndEditor = function()
 			panTimer = clamp(panTimer - love.timer.getDelta(), 0, math.huge)
 		end
 		while true do
-			if inputs.getAction('right') and not myself.debounce then
+			if inputs.getAction('right') and not myself.debounce and not keyInstances.settingsui.settingsOpen then
 				if rotTimer == 0 then
 					rotTimer = 0.5
 					while inputs.getAction('right') do
@@ -595,7 +595,7 @@ spriteTypes.patternRenderAndEditor = function()
 					canvasView:rotateTo(0)
 				end
 			end
-			if inputs.getAction('left') and not myself.debounce then
+			if inputs.getAction('left') and not myself.debounce and not keyInstances.settingsui.settingsOpen then
 				if scaleTimer == 0 then
 					scaleTimer = 0.5
 					while inputs.getAction('left') do
@@ -606,7 +606,7 @@ spriteTypes.patternRenderAndEditor = function()
 					canvasView:zoomTo(6)
 				end
 			end
-			if inputs.getAction('up') and not myself.debounce then
+			if inputs.getAction('up') and not myself.debounce and not keyInstances.settingsui.settingsOpen then
 				if panTimer == 0 then
 					panTimer = 0.5
 					while inputs.getAction('up') do
@@ -732,7 +732,7 @@ spriteTypes.patternRenderAndEditor = function()
 	myself.history = {}
 	scripts.history = coroutine.create(function()
 		while true do
-			if touch.down and not myself.debounce then
+			if touch.down and not myself.debounce and not keyInstances.settingsui.settingsOpen then
 				local x, y = canvasView:worldCoords(touch.x, touch.y)
 				x, y = math.floor(x), math.floor(y)
 				if not (x < 0 or x > 32 or y < 0 or y > 31) and not (undoRedo.hitboxes[1]:contains(touch.x, touch.y) or undoRedo.hitboxes[2]:contains(touch.x, touch.y)) then
@@ -1021,7 +1021,7 @@ spriteTypes.toolsPanel = function(x, y)
 
 	scripts.show = coroutine.create(function() 
 		while true do
-			if inputs.getAction('select') and not myself.debounce then
+			if inputs.getAction('select') and not myself.debounce and not keyInstances.settingsui.settingsOpen then
 				if not myself.trayOpen then
 					myself.x = 320
 					local timer = 0
@@ -1063,7 +1063,7 @@ spriteTypes.toolsPanel = function(x, y)
 	scripts.toolChange = coroutine.create(function()
 		local clickedButton = 1
 		while true do
-			if myself.trayOpen and not myself.debounce and touch.down then
+			if myself.trayOpen and not myself.debounce and not keyInstances.settingsui.settingsOpen and touch.down then
 				for i, hitbox in ipairs(hitboxes) do
 					if hitbox:contains(touch.x, touch.y) then
 						clickedButton = i
@@ -1151,7 +1151,7 @@ spriteTypes.undoRedo = function(x, y)
 	myself.debounce = false
 	scripts.undeRedo = coroutine.create(function() 
 		while true do
-			if touch.down and not myself.debounce then
+			if touch.down and not myself.debounce and not keyInstances.settingsui.settingsOpen then
 				local clicked = false
 				if myself.hitboxes[1]:contains(touch.x, touch.y) then --undo
 					clicked = true

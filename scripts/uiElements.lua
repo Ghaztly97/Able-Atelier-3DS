@@ -11,7 +11,7 @@ local currentPatternState = {
 	data2 = {},
 	data3 = {},
 	data4 = {},
-	pallet = {}
+	palette = {}
 }
 local saveData_parsed = {}
 
@@ -228,11 +228,11 @@ spriteTypes.patternRenderAndEditor = function()
 
 	myself.patternCanvas = love.graphics.newCanvas(32, 32)
 
-	myself.palletCanvas = love.graphics.newCanvas(320, 35)
-	myself.majorPallet = nil
+	myself.paletteCanvas = love.graphics.newCanvas(320, 35)
+	myself.majorpalette = nil
 	myself.selectedColor = 1
 
-	local function updatePatternCanvas(pixelTable, pallet, isUndoRedo, oldPixelTable)
+	local function updatePatternCanvas(pixelTable, palette, isUndoRedo, oldPixelTable)
 		local oldCanvas = love.graphics.getCanvas()
 		local x = 1
 		local y = 0
@@ -241,11 +241,11 @@ spriteTypes.patternRenderAndEditor = function()
 		for i, pixel in ipairs(pixelTable) do
 			if isUndoRedo then
 				if oldPixelTable[i] ~= pixel then
-					love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+					love.graphics.setColor(hex(colors[palette[pixel+1]+1]))
 					love.graphics.rectangle('fill', x-1, y, 1, 1)
 				end
 			else
-				love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+				love.graphics.setColor(hex(colors[palette[pixel+1]+1]))
 				love.graphics.rectangle('fill', x-1, y, 1, 1)
 			end
 
@@ -258,13 +258,13 @@ spriteTypes.patternRenderAndEditor = function()
 		love.graphics.setCanvas(oldCanvas)
 	end
 
-	local palletOpen = false
+	local paletteOpen = false
 	myself.debounce = false
 	myself.extraDraw = function(screen)
-		if not myself.majorPallet then
-			myself.majorPallet = love.graphics.newCanvas(320, 240)
+		if not myself.majorpalette then
+			myself.majorpalette = love.graphics.newCanvas(320, 240)
 			local oldCanvas = love.graphics.getCanvas()
-			love.graphics.setCanvas(myself.majorPallet)
+			love.graphics.setCanvas(myself.majorpalette)
 			love.graphics.clear()
 
 			love.graphics.setColor(0.5, 0.5, 0.5)
@@ -290,18 +290,18 @@ spriteTypes.patternRenderAndEditor = function()
 		local updateCanvas = receive('updateCanvas')
 		if updateCanvas then
 			if type(updateCanvas) == 'table' then
-				updatePatternCanvas(myself.activeEditor, currentPatternState.pallet, true, updateCanvas.oldPixelTable)
+				updatePatternCanvas(myself.activeEditor, currentPatternState.palette, true, updateCanvas.oldPixelTable)
 			else
-				updatePatternCanvas(myself.activeEditor, currentPatternState.pallet)
+				updatePatternCanvas(myself.activeEditor, currentPatternState.palette)
 			end
 
-			-- redraw the pallet:
+			-- redraw the palette:
 			local oldCanvas = love.graphics.getCanvas()
-			love.graphics.setCanvas(myself.palletCanvas)
+			love.graphics.setCanvas(myself.paletteCanvas)
 			love.graphics.clear()
 			love.graphics.setColor(0.7, 0.5, 0.5)
 			love.graphics.rectangle('fill', 0, -15, 320, 50, 15)
-			for i, color in ipairs(currentPatternState.pallet) do
+			for i, color in ipairs(currentPatternState.palette) do
 				love.graphics.setColor(hex(colors[color+1]))
 				love.graphics.rectangle('fill', 2.5+(i-1)*20, 10, 15, 15, 2)
 				local r, g, b =  love.graphics.getColor()
@@ -316,7 +316,7 @@ spriteTypes.patternRenderAndEditor = function()
 			local x, y = canvasView:worldCoords(touch.x, touch.y)
 			if not (x < 0 or x > 32 or y < 0 or y > 31) then
 				love.graphics.setCanvas(myself.patternCanvas)
-				love.graphics.setColor(hex(colors[currentPatternState.pallet[myself.selectedColor]+1]))
+				love.graphics.setColor(hex(colors[currentPatternState.palette[myself.selectedColor]+1]))
 				if myself.penSize == 1 then
 					x, y = math.floor(x), math.floor(y)
 					love.graphics.rectangle('fill', x, y, 1, 1)
@@ -422,14 +422,14 @@ spriteTypes.patternRenderAndEditor = function()
 		
 		canvasView:detach()
 
-		-- draw pallet
-		love.graphics.draw(myself.palletCanvas)
+		-- draw palette
+		love.graphics.draw(myself.paletteCanvas)
 		love.graphics.setColor(1,1,0)
 		love.graphics.rectangle('line', 2+(myself.selectedColor-1)*20, 9.5, 16, 16, 2)
 		love.graphics.setColor(1,1,1)
 
-		if palletOpen then
-			love.graphics.draw(myself.majorPallet)
+		if paletteOpen then
+			love.graphics.draw(myself.majorpalette)
 		end
 
 		if myself.switchingActiveEditor then
@@ -460,7 +460,7 @@ spriteTypes.patternRenderAndEditor = function()
 				currentPatternState.data2 = patternStringToTable(received.patternData2)
 				currentPatternState.data3 = patternStringToTable(received.patternData3)
 				currentPatternState.data4 = patternStringToTable(received.patternData4)
-				currentPatternState.pallet = saveData_parsed.pallet
+				currentPatternState.palette = saveData_parsed.palette
 
 				myself.activeEditor = currentPatternState.data1
 				broadcast('mannequinUpdate')
@@ -623,17 +623,17 @@ spriteTypes.patternRenderAndEditor = function()
 	end)
 
 	scripts.colorSelect = coroutine.create(function()
-		local palletBarHitboxes = {}
-		local largePalletHitboxes = {}
+		local paletteBarHitboxes = {}
+		local largepaletteHitboxes = {}
 		for i=1, 15 do
-			palletBarHitboxes[i] = HC.rectangle(2.5+(i-1)*20, 10, 15, 15)
+			paletteBarHitboxes[i] = HC.rectangle(2.5+(i-1)*20, 10, 15, 15)
 		end
 		for y=1, 16 do
 			for x = 1, 9 do
 				local index = (y-1)*16+x
 				local hitbox = HC.rectangle(15+x*15, 9.5+y*12.5, 15, 10)
 				hitbox.index = index
-				table.insert(largePalletHitboxes, hitbox)
+				table.insert(largepaletteHitboxes, hitbox)
 			end
 		end
 
@@ -642,13 +642,13 @@ spriteTypes.patternRenderAndEditor = function()
 				local index = (y-1)*16+(16)
 				local hitbox = HC.rectangle(15+x*15, 9.5+y*12.5, 15, 10)
 				hitbox.index = index
-				table.insert(largePalletHitboxes, hitbox)
+				table.insert(largepaletteHitboxes, hitbox)
 			end
 		end
 		while true do
 			if touch.down and touch.y < 35 then
 				local clicked = false
-				for i, hitbox in ipairs(palletBarHitboxes) do
+				for i, hitbox in ipairs(paletteBarHitboxes) do
 					if hitbox:contains(touch.x, touch.y) then
 						myself.selectedColor = i
 						clicked = true
@@ -659,16 +659,16 @@ spriteTypes.patternRenderAndEditor = function()
 					while touch.down do
 						timer = timer + love.timer.getDelta()
 						if timer > 0.5 then
-							palletOpen = true
+							paletteOpen = true
 							myself.debounce = true
 							while touch.down do
 								coroutine.yield()
 							end
-							while palletOpen do
+							while paletteOpen do
 								if touch.down then
-									for v, largePalletHitbox in ipairs(largePalletHitboxes) do
-										if largePalletHitbox:contains(touch.x, touch.y) then
-											currentPatternState.pallet[myself.selectedColor] = largePalletHitbox.index - 1
+									for v, largepaletteHitbox in ipairs(largepaletteHitboxes) do
+										if largepaletteHitbox:contains(touch.x, touch.y) then
+											currentPatternState.palette[myself.selectedColor] = largepaletteHitbox.index - 1
 											broadcast('mannequinUpdate')
 											broadcast('updateCanvas')
 											break
@@ -681,7 +681,7 @@ spriteTypes.patternRenderAndEditor = function()
 								end
 								coroutine.yield()
 							end
-							palletOpen = false
+							paletteOpen = false
 							myself.debounce = false
 							break
 						end
@@ -830,7 +830,7 @@ spriteTypes.mannequinRender = function()
 	myself.mannequinFront = love.graphics.newCanvas(192, 192)
 	myself.mannequinBack = love.graphics.newCanvas(192, 192)
 
-	local function refreshMannequin(pixelTable, pallet, canvas, isUndoRedo, oldPixelTable)
+	local function refreshMannequin(pixelTable, palette, canvas, isUndoRedo, oldPixelTable)
 		local oldCanvas = love.graphics.getCanvas()
 		local x = 1
 		local y = 1
@@ -863,11 +863,11 @@ spriteTypes.mannequinRender = function()
 
 			if isUndoRedo then
 				if oldPixelTable[i] ~= pixel then
-					love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+					love.graphics.setColor(hex(colors[palette[pixel+1]+1]))
 					love.graphics.polygon('fill', vertices)
 				end
 			else
-				love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+				love.graphics.setColor(hex(colors[palette[pixel+1]+1]))
 				love.graphics.polygon('fill', vertices)
 			end
 
@@ -906,11 +906,11 @@ spriteTypes.mannequinRender = function()
 		local mannequinUpdate = receive('mannequinUpdate')
 		if mannequinUpdate and tableContains(showTable, saveData_parsed.patternType) then
 			if type(mannequinUpdate) == 'table' then
-				refreshMannequin(currentPatternState.data1, currentPatternState.pallet, myself.mannequinFront, true, mannequinUpdate.data1)
-				refreshMannequin(currentPatternState.data2, currentPatternState.pallet, myself.mannequinBack, true, mannequinUpdate.data2)
+				refreshMannequin(currentPatternState.data1, currentPatternState.palette, myself.mannequinFront, true, mannequinUpdate.data1)
+				refreshMannequin(currentPatternState.data2, currentPatternState.palette, myself.mannequinBack, true, mannequinUpdate.data2)
 			else
-				refreshMannequin(currentPatternState.data1, currentPatternState.pallet, myself.mannequinFront)
-				refreshMannequin(currentPatternState.data2, currentPatternState.pallet, myself.mannequinBack)
+				refreshMannequin(currentPatternState.data1, currentPatternState.palette, myself.mannequinFront)
+				refreshMannequin(currentPatternState.data2, currentPatternState.palette, myself.mannequinBack)
 			end
 
 			local oldCanvas = love.graphics.getCanvas()

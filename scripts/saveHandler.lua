@@ -91,13 +91,13 @@ spriteTypes.saveHandler = function()
 	local selectedPattern = 1
 	local selectedPlayer = 1
 
-	local function drawPatternSquare(pixelTable, pallet, xoffset, yoffset)
+	local function drawPatternSquare(pixelTable, palette, xoffset, yoffset)
 		local oldCanvas = love.graphics.getCanvas()
 		local x = 1
 		local y = 0
 		for i = 1, #pixelTable do
 			pixel = pixelTable[i]
-			love.graphics.setColor(hex(colors[pallet[pixel+1]+1]))
+			love.graphics.setColor(hex(colors[palette[pixel+1]+1]))
 			love.graphics.rectangle('fill', (x + xoffset)-1, (y + yoffset), 1, 1)
 
 			x = x + 1
@@ -123,10 +123,10 @@ spriteTypes.saveHandler = function()
 			patternData4 = readBytes(patternStart+0x66c, patternStart+0x86b),
 		}
 		print(parsedData.patternType)
-		parsedData.pallet = {}
-		for i=0, 14 do -- build pallet
+		parsedData.palette = {}
+		for i=0, 14 do -- build palette
 			local byte = patternStart+0x58 + i
-			table.insert(parsedData.pallet, string.byte(readBytes(byte, byte)))
+			table.insert(parsedData.palette, string.byte(readBytes(byte, byte)))
 		end
 		return parsedData
 	end
@@ -169,7 +169,7 @@ spriteTypes.saveHandler = function()
 				selectedPattern = i
 
 				local tempPatternData = parsePatterns()
-				drawPatternSquare(patternStringToTable(tempPatternData.patternData1), tempPatternData.pallet, x * 32, y*32)
+				drawPatternSquare(patternStringToTable(tempPatternData.patternData1), tempPatternData.palette, x * 32, y*32)
 				x = x + 1
 				if x > 4 then
 					x = 0
@@ -188,7 +188,7 @@ spriteTypes.saveHandler = function()
 				selectedPattern = i
 
 				local tempPatternData = parsePatterns()
-				drawPatternSquare(patternStringToTable(tempPatternData.patternData1), tempPatternData.pallet, x * 32, y*32)
+				drawPatternSquare(patternStringToTable(tempPatternData.patternData1), tempPatternData.palette, x * 32, y*32)
 				x = x + 1
 				if x > 4 then
 					x = 0
@@ -377,16 +377,16 @@ spriteTypes.saveHandler = function()
 				local patternStart = playerBlocksBegin + (playerBlockSize*(selectedPlayer-1)) + (patternBlockSize*(selectedPattern-1)) + 0x2c
 				local currentPatternState = received
 				-- 0x058 - 0x066 ( 15) = Palette Indexes
-				local newPalletString = ''
-				for i, color in ipairs(currentPatternState.pallet) do -- pallet update
-					newPalletString = newPalletString..string.char(color)
+				local newpaletteString = ''
+				for i, color in ipairs(currentPatternState.palette) do -- palette update
+					newpaletteString = newpaletteString..string.char(color)
 				end
-				if #newPalletString ~= 15 then
-					error('Pallet incorrect size!')
+				if #newpaletteString ~= 15 then
+					error('palette incorrect size!')
 				end
-				stepString = 'Saving New Pallet...'
+				stepString = 'Saving New palette...'
 				coroutine.yield()
-				globalSave = replaceChars(globalSave, patternStart + 0x059, patternStart + 0x067, newPalletString)
+				globalSave = replaceChars(globalSave, patternStart + 0x059, patternStart + 0x067, newpaletteString)
 
 				stepString = 'Saving Pattern Data...'
 				coroutine.yield()

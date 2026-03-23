@@ -11,7 +11,9 @@ local currentPatternState = {
 	data2 = {},
 	data3 = {},
 	data4 = {},
-	palette = {}
+	palette = {},
+	creator = '',
+	name = ''
 }
 local saveData_parsed = {}
 
@@ -229,7 +231,7 @@ spriteTypes.patternRenderAndEditor = function()
 	myself.patternCanvas = love.graphics.newCanvas(32, 32)
 
 	myself.paletteCanvas = love.graphics.newCanvas(320, 35)
-	myself.majorpalette = nil
+	myself.majorPalette = nil
 	myself.selectedColor = 1
 
 	local function updatePatternCanvas(pixelTable, palette, isUndoRedo, oldPixelTable)
@@ -261,10 +263,10 @@ spriteTypes.patternRenderAndEditor = function()
 	local paletteOpen = false
 	myself.debounce = false
 	myself.extraDraw = function(screen)
-		if not myself.majorpalette then
-			myself.majorpalette = love.graphics.newCanvas(320, 240)
+		if not myself.majorPalette then
+			myself.majorPalette = love.graphics.newCanvas(320, 240)
 			local oldCanvas = love.graphics.getCanvas()
-			love.graphics.setCanvas(myself.majorpalette)
+			love.graphics.setCanvas(myself.majorPalette)
 			love.graphics.clear()
 
 			love.graphics.setColor(0.5, 0.5, 0.5)
@@ -303,10 +305,10 @@ spriteTypes.patternRenderAndEditor = function()
 			love.graphics.rectangle('fill', 0, -15, 320, 50, 15)
 			for i, color in ipairs(currentPatternState.palette) do
 				love.graphics.setColor(hex(colors[color+1]))
-				love.graphics.rectangle('fill', 2.5+(i-1)*20, 10, 15, 15, 2)
+				love.graphics.rectangle('fill', 10+(i-1)*20, 10, 15, 15, 2)
 				local r, g, b =  love.graphics.getColor()
 				love.graphics.setColor(r*0.5, g*0.5, b*0.5)
-				love.graphics.rectangle('line', 2.5+(i-1)*20, 10, 15, 15, 2)
+				love.graphics.rectangle('line', 10+(i-1)*20, 10, 15, 15, 2)
 			end
 			love.graphics.setCanvas(oldCanvas)
 		end
@@ -425,11 +427,11 @@ spriteTypes.patternRenderAndEditor = function()
 		-- draw palette
 		love.graphics.draw(myself.paletteCanvas)
 		love.graphics.setColor(1,1,0)
-		love.graphics.rectangle('line', 2+(myself.selectedColor-1)*20, 9.5, 16, 16, 2)
+		love.graphics.rectangle('line', 10+(myself.selectedColor-1)*20, 9.5, 16, 16, 2)
 		love.graphics.setColor(1,1,1)
 
 		if paletteOpen then
-			love.graphics.draw(myself.majorpalette)
+			love.graphics.draw(myself.majorPalette)
 		end
 
 		if myself.switchingActiveEditor then
@@ -461,6 +463,8 @@ spriteTypes.patternRenderAndEditor = function()
 				currentPatternState.data3 = patternStringToTable(received.patternData3)
 				currentPatternState.data4 = patternStringToTable(received.patternData4)
 				currentPatternState.palette = saveData_parsed.palette
+				currentPatternState.patternCreator = saveData_parsed.patternCreator
+				currentPatternState.patternName = saveData_parsed.patternName
 
 				myself.activeEditor = currentPatternState.data1
 				broadcast('mannequinUpdate')
@@ -624,16 +628,16 @@ spriteTypes.patternRenderAndEditor = function()
 
 	scripts.colorSelect = coroutine.create(function()
 		local paletteBarHitboxes = {}
-		local largepaletteHitboxes = {}
+		local largePaletteHitboxes = {}
 		for i=1, 15 do
-			paletteBarHitboxes[i] = HC.rectangle(2.5+(i-1)*20, 10, 15, 15)
+			paletteBarHitboxes[i] = HC.rectangle(10+(i-1)*20, 10, 15, 15)
 		end
 		for y=1, 16 do
 			for x = 1, 9 do
 				local index = (y-1)*16+x
 				local hitbox = HC.rectangle(15+x*15, 9.5+y*12.5, 15, 10)
 				hitbox.index = index
-				table.insert(largepaletteHitboxes, hitbox)
+				table.insert(largePaletteHitboxes, hitbox)
 			end
 		end
 
@@ -642,7 +646,7 @@ spriteTypes.patternRenderAndEditor = function()
 				local index = (y-1)*16+(16)
 				local hitbox = HC.rectangle(15+x*15, 9.5+y*12.5, 15, 10)
 				hitbox.index = index
-				table.insert(largepaletteHitboxes, hitbox)
+				table.insert(largePaletteHitboxes, hitbox)
 			end
 		end
 		while true do
@@ -666,9 +670,9 @@ spriteTypes.patternRenderAndEditor = function()
 							end
 							while paletteOpen do
 								if touch.down then
-									for v, largepaletteHitbox in ipairs(largepaletteHitboxes) do
-										if largepaletteHitbox:contains(touch.x, touch.y) then
-											currentPatternState.palette[myself.selectedColor] = largepaletteHitbox.index - 1
+									for v, largePaletteHitbox in ipairs(largePaletteHitboxes) do
+										if largePaletteHitbox:contains(touch.x, touch.y) then
+											currentPatternState.palette[myself.selectedColor] = largePaletteHitbox.index - 1
 											broadcast('mannequinUpdate')
 											broadcast('updateCanvas')
 											break
@@ -711,10 +715,14 @@ spriteTypes.patternRenderAndEditor = function()
 				keyInstances.editor = nil
 				keyInstances.mannequinRender = nil
 				keyInstances.toolsPanel = nil
+				keyInstances.patternConfig:destroy()
+				keyInstances.patternConfig = nil
 
 				editor = nil
 				mannequinRender = nil
 				toolsPanel = nil
+
+				createInstance('settingsui')
 
 				coroutine.yield()
 				collectgarbage('collect')
@@ -1171,6 +1179,159 @@ spriteTypes.undoRedo = function(x, y)
 					end
 					editor.debounce = false
 				end
+			end
+			coroutine.yield()
+		end
+	end)
+
+	myself.scripts = scripts
+	return myself
+end
+
+spriteTypes.patternConfig = function(x, y) 
+	local myself = baseSprite()
+	local scripts = {}
+	local gear = love.graphics.newImage('assets/images/gear.png')
+	local prettyKeys = {
+		patternName = 'Name',
+		patternCreator = 'Creator',
+	}
+	local hitboxes = {}
+	myself.screen = 'bottom'
+	keyInstances.patternConfig = myself
+
+	myself.textInput = ''
+	function love.textinput(text)
+		if love._os ~= 'horizon' then
+	    	myself.textInput = myself.textInput..text
+	    else
+	    	myself.textInput = text
+	    end
+	end
+
+	local settingsKeys = {
+		'patternName',
+		'patternCreator',
+	}
+
+	table.sort(settingsKeys, function(a, b) return a < b end)
+	for i, key in ipairs(settingsKeys) do
+		local hitbox = HC.rectangle(40, 45 + (i*15), 240, 14)
+		hitbox.key = key
+		table.insert(hitboxes, hitbox)
+	end
+
+	local buttonHitbox = HC.rectangle(5, 195, 40, 40)
+
+	myself.settingsOpen = false
+	myself.extraDraw = function() 
+		love.graphics.setColor(0.6, 0.4, 0.6, 0.8)
+		love.graphics.rectangle('fill', 5, 195, 40, 40, 8)
+		love.graphics.setColor(0.3, 0.1, 0.3)
+		love.graphics.rectangle('line', 5, 195, 40, 40, 8)
+		love.graphics.draw(gear, 5+20, 195+20, love.timer.getTime(), 0.5, 0.5, 32, 32)
+
+		if myself.settingsOpen then
+			love.graphics.setColor(0.6, 0.4, 0.6, 0.8)
+			love.graphics.rectangle('fill', 20, 40, 280, 150, 15)
+			love.graphics.setColor(0.3, 0.1, 0.3)
+			love.graphics.rectangle('line', 20, 40, 280, 150, 15)
+			love.graphics.printf('PATTERN CONFIG', 40, 45, 240, 'center')
+
+			for i, key in ipairs(settingsKeys) do
+				love.graphics.printf(tostring(prettyKeys[key])..' : '..tostring(currentPatternState[key]), 40, 45 + (i*15), 240, 'center')
+			end
+			for i, hitbox in ipairs(hitboxes) do
+				hitbox:draw('line')
+			end
+		end
+	end
+
+	scripts.selector = coroutine.create(function() 
+		while true do
+			if touch.down then
+				if buttonHitbox:contains(touch.x, touch.y) then
+					myself.settingsOpen = not myself.settingsOpen
+					--toggleUiDebounce(myself.settingsOpen)
+				end
+
+				local clickedHitbox = nil
+				if myself.settingsOpen and touch.down then
+					for i, hitbox in ipairs(hitboxes) do
+						if hitbox:contains(touch.x, touch.y) then
+							clickedHitbox = hitbox
+							break
+						end
+					end
+				end
+				if clickedHitbox then
+					local key = clickedHitbox.key
+					if type(currentPatternState[key]) == 'boolean' then
+						currentPatternState[key] = not currentPatternState[key]
+					end
+					if type(currentPatternState[key]) == 'string' then
+						love.keyboard.setTextInput(true)
+						local oldVal = currentPatternState[key]
+						myself.textInput = ''
+						if love._os ~= 'horizon' then
+							local t = 5
+							while t > 0 do
+								t = t - love.timer.getDelta()
+								currentPatternState[key] = myself.textInput
+								coroutine.yield()
+							end
+						else
+							coroutine.yield()
+							if #myself.textInput ~= 0 then
+								if key == 'patternCreator' then
+									currentPatternState[key] = string.sub(myself.textInput, 1, 8)
+								elseif key == 'patternName' then
+									currentPatternState[key] = string.sub(myself.textInput, 1, 10)
+								else
+									currentPatternState[key] = myself.textInput
+								end
+							end
+						end
+						love.keyboard.setTextInput(false)
+					end
+					if type(currentPatternState[key]) == 'number' then
+						if love._os ~= 'horizon' then
+							love.keyboard.setTextInput(true)
+						else
+							love.keyboard.setTextInput(true, {type = 'numpad'})
+						end
+						local oldVal = currentPatternState[key]
+						myself.textInput = ''
+						if love._os ~= 'horizon' then
+							local t = 5
+							while t > 0 do
+								t = t - love.timer.getDelta()
+								saveData_parsed[key] = tonumber(myself.textInput)
+								coroutine.yield()
+							end
+						else
+							coroutine.yield()
+							if #myself.textInput ~= 0 and type(tonumber(myself.textInput)) ~= 'nil' then
+								currentPatternState[key] = tonumber(myself.textInput)
+							end
+						end
+						love.keyboard.setTextInput(false)
+					end
+				end
+
+				while touch.down do
+					coroutine.yield()
+				end
+			end
+
+			coroutine.yield()
+		end
+	end)
+
+	scripts.layer = coroutine.create(function() 
+		while true do
+			if receive('saveParsed') then
+				myself:goToLayer(#gameSprites)
 			end
 			coroutine.yield()
 		end

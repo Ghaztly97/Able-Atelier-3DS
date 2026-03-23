@@ -357,11 +357,13 @@ spriteTypes.saveHandler = function()
 				selectingPlayer = false
 
 				parsedTable = parsePatterns()
-				
+				keyInstances.settingsui:destroy()
+
 				createInstance('mannequinRender', 0, 0)
 				createInstance('patternRenderAndEditor', 0, 0)
 				createInstance('undoRedo', 0, 0)
 				createInstance('toolsPanel', 320 - 123, 240/2 - 60)
+				createInstance('patternConfig', 0, 0)
 				broadcast('saveParsed', parsedTable)
 				myself:goToLayer(#gameSprites)
 				coroutine.yield()	
@@ -387,6 +389,43 @@ spriteTypes.saveHandler = function()
 				stepString = 'Saving New palette...'
 				coroutine.yield()
 				globalSave = replaceChars(globalSave, patternStart + 0x059, patternStart + 0x067, newpaletteString)
+
+				stepString = 'Updating Creator + Pattern name...'
+				coroutine.yield()
+				local insertedCreatorString = ''
+				-- received.patternCreator
+				-- insert new creator name first
+				for i = 1, 9 do
+					local char = string.sub(received.patternCreator, i, i)
+					if i == '' then
+						break
+					end
+					insertedCreatorString = insertedCreatorString..char
+					insertedCreatorString = insertedCreatorString..string.char(0x00)
+				end
+				for i = #insertedCreatorString + 1, 18 do
+					insertedCreatorString = insertedCreatorString..string.char(0x00)
+				end
+				local insertedPatternName = ''
+				for i = 1, 12 do
+					local char = string.sub(received.patternName, i, i)
+					if i == '' then
+						break
+					end
+					insertedPatternName = insertedPatternName..char
+					insertedPatternName = insertedPatternName..string.char(0x00)
+				end
+				for i = #insertedPatternName + 1, 42 do
+					insertedPatternName = insertedPatternName..string.char(0x00)
+				end
+
+
+				--[[
+				0x000 - 0x029 ( 42) = Pattern Title
+				0x02C - 0x03D ( 18) = User Name
+				]]
+				globalSave = replaceChars(globalSave, patternStart + 1, patternStart + 0x029 + 1, insertedPatternName)
+				globalSave = replaceChars(globalSave, patternStart + 0x02c + 1, patternStart + 0x03d + 1, insertedCreatorString)
 
 				stepString = 'Saving Pattern Data...'
 				coroutine.yield()

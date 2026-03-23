@@ -1,6 +1,5 @@
 local spriteTypes = {}
 
-
 spriteTypes.settingsui = function(x, y) 
 	local myself = baseSprite()
 	local scripts = {}

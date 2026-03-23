@@ -715,13 +715,13 @@ spriteTypes.patternRenderAndEditor = function()
 				keyInstances.editor = nil
 				keyInstances.mannequinRender = nil
 				keyInstances.toolsPanel = nil
-				keyInstances.patternConfig:destroy()
-				keyInstances.patternConfig = nil
 
 				editor = nil
 				mannequinRender = nil
 				toolsPanel = nil
 
+				keyInstances.patternConfig:destroy()
+				keyInstances.patternConfig = nil
 				createInstance('settingsui')
 
 				coroutine.yield()
@@ -1106,6 +1106,10 @@ spriteTypes.toolsPanel = function(x, y)
 							editor = nil
 							mannequinRender = nil
 							toolsPanel = nil
+
+							keyInstances.patternConfig:destroy()
+							keyInstances.patternConfig = nil
+							createInstance('settingsui')
 
 							coroutine.yield()
 							collectgarbage('collect')
